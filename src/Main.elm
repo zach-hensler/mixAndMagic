@@ -17,28 +17,44 @@ main =
 
 
 -- MODEL
+type alias Coordinates = (Int, Int)
+
+type alias Zone =
+  { borders: List Coordinates
+  , entrance: Coordinates
+  , exit: Coordinates
+  , shop: Coordinates
+  , width: Int,
+  height: Int }
 
 type alias Model =
-  { currentZone: Int
-  , playerXPos: Int
+  { playerXPos: Int
   , playerYPos: Int
-  , zone: List (List String)
+  , currentZone: Zone
+  , remainingZones: List Zone
+  , defaultZone: Zone
   }
 
 
 init : Model
 init =
-  { currentZone = 0
-  , playerXPos = 1
+  { playerXPos = 1
   , playerYPos = 1
-  , zone = [ ["-", "-", "-", "-", "-", "-", "-", "-"]
-           , ["-", "", "", "", "", "", "", "-"]
-           , ["-", "", "", "", "", "", "", "-"]
-           , ["-", "", "", "", "", "", "", "-"]
-           , ["-", "", "", "", "", "", "", "-"]
-           , ["-", "", "", "", "", "", "", "-"]
-           , ["-", "", "", "", "", "", "", "-"]
-           , ["-", "-", "-", "-", "-", "-", "-", "-"]]
+  , currentZone =
+    { borders = [(5,0), (4, 0), (5,1)]
+    , entrance = (0, 0)
+    , exit = (5, 5)
+    , shop = (3, 3)
+    , width = 5
+    , height = 5 }
+  , remainingZones = []
+  , defaultZone =
+    { borders = [(5,0), (4, 0), (5,1)]
+    , entrance = (0, 0)
+    , exit = (5, 5)
+    , shop = (3, 3)
+    , width = 5
+    , height = 5 }
   }
 
 
@@ -59,53 +75,60 @@ update msg model =
   case msg of
     MovePlayerLeft ->
       { model | playerXPos =
-        if isForbiddenSpace (model.playerXPos - 1) model.playerYPos
+        if isForbiddenSpace model (model.playerXPos - 1) model.playerYPos
         then model.playerXPos
         else model.playerXPos - 1 }
     MovePlayerRight ->
       { model | playerXPos =
-        if isForbiddenSpace (model.playerXPos + 1) model.playerYPos
+        if isForbiddenSpace model (model.playerXPos + 1) model.playerYPos
         then model.playerXPos
-        else model.playerXPos + 1}
+        else model.playerXPos + 1 }
     MovePlayerUp ->
       { model | playerYPos =
-        if isForbiddenSpace model.playerXPos (model.playerYPos - 1)
+        if isForbiddenSpace model model.playerXPos (model.playerYPos - 1)
         then model.playerYPos
-        else model.playerYPos - 1}
+        else model.playerYPos - 1 }
     MovePlayerDown ->
       { model | playerYPos =
-        if isForbiddenSpace model.playerXPos (model.playerYPos + 1)
+        if isForbiddenSpace model model.playerXPos (model.playerYPos + 1)
         then model.playerYPos
-        else model.playerYPos + 1}
+        else model.playerYPos + 1 }
     AdvanceZone ->
-      { model | currentZone = model.currentZone + 1 }
+      { model
+      | currentZone = List.head model.remainingZones |> Maybe.withDefault model.defaultZone
+      , remainingZones = List.tail model.remainingZones |> Maybe.withDefault [] }
 
-isForbiddenSpace newPlayerXPos newPlayerYPos =
-  if newPlayerXPos > 6 || newPlayerYPos > 6 || newPlayerXPos < 1 || newPlayerYPos < 1
+isForbiddenSpace: Model -> Int -> Int -> Bool
+isForbiddenSpace model newPlayerXPos newPlayerYPos =
+  if newPlayerXPos > model.currentZone.width
+  || newPlayerYPos > model.currentZone.height
+  || newPlayerXPos < 0
+  || newPlayerYPos < 0
+  || List.member (newPlayerXPos, newPlayerYPos) model.currentZone.borders
   then True
   else False
 
 
 -- VIEW
 
-drawZoneRow: (Int, Int) -> Int -> List String -> Html Msg
-drawZoneRow (playerXPos, playerYPos) rowIndex rowMap =
-  div
-    [ style "display" "flex"
-    ] (List.indexedMap (drawZoneSquare (playerXPos, playerYPos) rowIndex) rowMap)
+drawZoneRow: Model -> Int -> Html Msg
+drawZoneRow model yCoordinate =
+  div[style "display" "flex"](List.map (drawZoneSquare model yCoordinate) (List.range 0 model.currentZone.width))
 
-drawZoneSquare: (Int, Int) -> Int -> Int -> String -> Html Msg
-drawZoneSquare (playerXPos, playerYPos) squareYPos squareXPos squareDefaultContent =
-  span
-      [ style "border" "solid black 1px"
-      , style "padding" "5px"
-      , style "width" "20px"
-      , style "height" "20px"
-      ] [
-        if (playerXPos, playerYPos) == (squareXPos, squareYPos)
-        then text "X"
-        else text squareDefaultContent
-      ]
+drawZoneSquare: Model -> Int -> Int -> Html Msg
+drawZoneSquare model yCoordinate xCoordinate =
+  div
+    [ style "border" "solid black 1px"
+    , style "padding" "5px"
+    , style "width" "20px"
+    , style "height" "20px"
+    ]
+    [ if (xCoordinate, yCoordinate) == (model.playerXPos, model.playerYPos) then text "P"
+      else if (xCoordinate, yCoordinate) == (model.currentZone.shop) then text "S"
+      else if (xCoordinate, yCoordinate) == model.currentZone.exit then text "X"
+      else if List.member (xCoordinate, yCoordinate) model.currentZone.borders then text "*"
+      else text " "
+    ]
 
 view : Model -> Html Msg
 view model =
@@ -119,7 +142,7 @@ view model =
   ] [ div
       [ style "display" "flex"
       , style "flex-direction" "column"
-      ] (List.indexedMap (drawZoneRow (model.playerXPos, model.playerYPos)) model.zone)
+      ] (List.map (drawZoneRow model) (List.range 0 model.currentZone.height))
     , div
       [ style "margin" "10px 0"
       ][ button [ onClick MovePlayerLeft ] [ text "Left" ]
