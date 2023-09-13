@@ -8,7 +8,9 @@ import Html.Events exposing (onClick)
 
 
 
--- MAIN
+----------------------------
+-- MAIN --------------------
+----------------------------
 
 
 main =
@@ -16,7 +18,10 @@ main =
 
 
 
--- MODEL
+----------------------------
+-- MODEL -------------------
+----------------------------
+
 type alias Coordinates = (Int, Int)
 
 type alias Zone =
@@ -28,18 +33,15 @@ type alias Zone =
   height: Int }
 
 type alias Model =
-  { playerXPos: Int
-  , playerYPos: Int
+  { playerCoordinates: Coordinates
   , currentZone: Zone
   , remainingZones: List Zone
   , defaultZone: Zone
-  }
-
+  , playerInShop: Bool }
 
 init : Model
 init =
-  { playerXPos = 1
-  , playerYPos = 1
+  { playerCoordinates = (1, 1)
   , currentZone =
     { borders = [(5,0), (4, 0), (5,1)]
     , entrance = (0, 0)
@@ -47,19 +49,27 @@ init =
     , shop = (3, 3)
     , width = 5
     , height = 5 }
-  , remainingZones = []
-  , defaultZone =
-    { borders = [(5,0), (4, 0), (5,1)]
-    , entrance = (0, 0)
-    , exit = (5, 5)
-    , shop = (3, 3)
-    , width = 5
-    , height = 5 }
-  }
+  , remainingZones = [finalZone]
+  , defaultZone = finalZone
+  , playerInShop = False }
+
+finalZone: Zone
+finalZone =
+  { borders =
+    [ (0, 0), (1, 0), (2, 0), (3, 0), (4, 0)
+    , (0, 1), (0, 2), (0, 3), (0, 4)
+    , (4, 1), (4, 2), (4, 3), (4, 4)
+    , (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]
+  , entrance = (2, 2)
+  , exit = (5, 5)
+  , shop = (5, 5)
+  , width = 4
+  , height = 4}
 
 
-
--- UPDATE
+----------------------------
+-- UPDATE ------------------
+----------------------------
 
 
 type Msg
@@ -67,39 +77,30 @@ type Msg
   | MovePlayerRight
   | MovePlayerUp
   | MovePlayerDown
-  | AdvanceZone
+  | LeaveShop
 
 
-update : Msg -> Model -> Model
+update: Msg -> Model -> Model
 update msg model =
   case msg of
     MovePlayerLeft ->
-      { model | playerXPos =
-        if isForbiddenSpace model (model.playerXPos - 1) model.playerYPos
-        then model.playerXPos
-        else model.playerXPos - 1 }
+      moveToNewSpace (Tuple.mapFirst (\int -> int - 1) model.playerCoordinates) model |> handleMapInteractions
     MovePlayerRight ->
-      { model | playerXPos =
-        if isForbiddenSpace model (model.playerXPos + 1) model.playerYPos
-        then model.playerXPos
-        else model.playerXPos + 1 }
+      moveToNewSpace (Tuple.mapFirst (\int -> int + 1) model.playerCoordinates) model |> handleMapInteractions
     MovePlayerUp ->
-      { model | playerYPos =
-        if isForbiddenSpace model model.playerXPos (model.playerYPos - 1)
-        then model.playerYPos
-        else model.playerYPos - 1 }
+      moveToNewSpace (Tuple.mapSecond (\int -> int - 1) model.playerCoordinates) model |> handleMapInteractions
     MovePlayerDown ->
-      { model | playerYPos =
-        if isForbiddenSpace model model.playerXPos (model.playerYPos + 1)
-        then model.playerYPos
-        else model.playerYPos + 1 }
-    AdvanceZone ->
-      { model
-      | currentZone = List.head model.remainingZones |> Maybe.withDefault model.defaultZone
-      , remainingZones = List.tail model.remainingZones |> Maybe.withDefault [] }
+      moveToNewSpace (Tuple.mapSecond (\int -> int + 1) model.playerCoordinates) model |> handleMapInteractions
+    LeaveShop -> { model | playerInShop = False }
 
-isForbiddenSpace: Model -> Int -> Int -> Bool
-isForbiddenSpace model newPlayerXPos newPlayerYPos =
+moveToNewSpace: (Int, Int) -> Model -> Model
+moveToNewSpace newPlayerCoordinates model = { model | playerCoordinates =
+  if isForbiddenSpace model newPlayerCoordinates
+  then model.playerCoordinates
+  else newPlayerCoordinates }
+
+isForbiddenSpace: Model -> (Int, Int) -> Bool
+isForbiddenSpace model (newPlayerXPos, newPlayerYPos) =
   if newPlayerXPos > model.currentZone.width
   || newPlayerYPos > model.currentZone.height
   || newPlayerXPos < 0
@@ -108,8 +109,25 @@ isForbiddenSpace model newPlayerXPos newPlayerYPos =
   then True
   else False
 
+handleMapInteractions: Model -> Model
+handleMapInteractions model =
+  if model.playerCoordinates == model.currentZone.exit then advanceZone model
+  else if model.playerCoordinates == model.currentZone.shop then enterShop model
+  else model
 
--- VIEW
+advanceZone: Model -> Model
+advanceZone model =
+  let newZone = List.head model.remainingZones |> Maybe.withDefault model.defaultZone in
+  { model
+  | currentZone = newZone
+  , remainingZones = List.tail model.remainingZones |> Maybe.withDefault []
+  , playerCoordinates = newZone.entrance }
+
+enterShop model = { model | playerInShop = True }
+
+----------------------------
+-- VIEW --------------------
+----------------------------
 
 drawZoneRow: Model -> Int -> Html Msg
 drawZoneRow model yCoordinate =
@@ -123,7 +141,7 @@ drawZoneSquare model yCoordinate xCoordinate =
     , style "width" "20px"
     , style "height" "20px"
     ]
-    [ if (xCoordinate, yCoordinate) == (model.playerXPos, model.playerYPos) then text "P"
+    [ if (xCoordinate, yCoordinate) == model.playerCoordinates then text "P"
       else if (xCoordinate, yCoordinate) == (model.currentZone.shop) then text "S"
       else if (xCoordinate, yCoordinate) == model.currentZone.exit then text "X"
       else if List.member (xCoordinate, yCoordinate) model.currentZone.borders then text "*"
@@ -139,15 +157,18 @@ view model =
   , style "flex-direction" "column"
   , style "justify-content" "center"
   , style "align-items" "center"
-  ] [ div
-      [ style "display" "flex"
-      , style "flex-direction" "column"
-      ] (List.map (drawZoneRow model) (List.range 0 model.currentZone.height))
-    , div
-      [ style "margin" "10px 0"
-      ][ button [ onClick MovePlayerLeft ] [ text "Left" ]
-         , button [ onClick MovePlayerUp ] [ text "Up" ]
-         , button [ onClick MovePlayerDown ] [ text "Down" ]
-         , button [ onClick MovePlayerRight ] [ text "Right" ]
-      ]
-    ]
+  ]
+  [ div
+    [ style "display" "flex"
+    , style "flex-direction" "column"
+    ] (List.map (drawZoneRow model) (List.range 0 model.currentZone.height))
+  , div
+    [ style "margin" "10px 0"
+    ][ button [ onClick MovePlayerLeft ] [ text "Left" ]
+     , button [ onClick MovePlayerUp ] [ text "Up" ]
+     , button [ onClick MovePlayerDown ] [ text "Down" ]
+     , button [ onClick MovePlayerRight ] [ text "Right" ] ]
+  , div [ style "visibility" (if model.playerInShop then "visible" else "hidden") ]
+    [ text "You are in the shop"
+    , button [ onClick LeaveShop ] [ text "Leave Shop" ] ]
+  ]
