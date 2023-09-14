@@ -2,7 +2,7 @@ module Main exposing (..)
 
 
 import Browser
-import Html exposing (Html, button, div, span, text)
+import Html exposing (Html, button, div, hr, span, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 
@@ -37,7 +37,8 @@ type alias Model =
   , currentZone: Zone
   , remainingZones: List Zone
   , defaultZone: Zone
-  , playerInShop: Bool }
+  , playerInShop: Bool
+  , menuIsOpen: Bool}
 
 init : Model
 init =
@@ -51,7 +52,8 @@ init =
     , height = 5 }
   , remainingZones = [finalZone]
   , defaultZone = finalZone
-  , playerInShop = False }
+  , playerInShop = False
+  , menuIsOpen = False}
 
 finalZone: Zone
 finalZone =
@@ -73,16 +75,20 @@ finalZone =
 
 
 type Msg
-  = MovePlayerLeft
+  = Reset
+  | MovePlayerLeft
   | MovePlayerRight
   | MovePlayerUp
   | MovePlayerDown
   | LeaveShop
+  | OpenMenu
+  | CloseMenu
 
 
 update: Msg -> Model -> Model
 update msg model =
   case msg of
+    Reset -> init
     MovePlayerLeft ->
       moveToNewSpace (Tuple.mapFirst (\int -> int - 1) model.playerCoordinates) model |> handleMapInteractions
     MovePlayerRight ->
@@ -92,6 +98,8 @@ update msg model =
     MovePlayerDown ->
       moveToNewSpace (Tuple.mapSecond (\int -> int + 1) model.playerCoordinates) model |> handleMapInteractions
     LeaveShop -> { model | playerInShop = False }
+    OpenMenu -> { model | menuIsOpen = True }
+    CloseMenu -> { model | menuIsOpen = False }
 
 moveToNewSpace: (Int, Int) -> Model -> Model
 moveToNewSpace newPlayerCoordinates model = { model | playerCoordinates =
@@ -129,6 +137,25 @@ enterShop model = { model | playerInShop = True }
 -- VIEW --------------------
 ----------------------------
 
+drawZoneAndControls: Model -> Html Msg
+drawZoneAndControls model =
+  div []
+    [ div
+      [ style "display" "flex"
+      , style "flex-direction" "column"
+      ] (List.map (drawZoneRow model) (List.range 0 model.currentZone.height))
+    , div
+      [ style "margin" "10px 0"
+      , style "display" "flex"
+      , style "justify-content" "space-around" ]
+      [ button [ onClick MovePlayerLeft ] [ text "Left" ]
+      , button [ onClick MovePlayerUp ] [ text "Up" ]
+      , button [ onClick MovePlayerDown ] [ text "Down" ]
+      , button [ onClick MovePlayerRight ] [ text "Right" ] ]
+    , div [ style "display" (if model.playerInShop then "block" else "none") ]
+        [ text "You are in the shop"
+      , button [ onClick LeaveShop ] [ text "Leave Shop" ] ] ]
+
 drawZoneRow: Model -> Int -> Html Msg
 drawZoneRow model yCoordinate =
   div[style "display" "flex"](List.map (drawZoneSquare model yCoordinate) (List.range 0 model.currentZone.width))
@@ -138,8 +165,8 @@ drawZoneSquare model yCoordinate xCoordinate =
   div
     [ style "border" "solid black 1px"
     , style "padding" "5px"
-    , style "width" "20px"
-    , style "height" "20px"
+    , style "width" "40px"
+    , style "height" "40px"
     ]
     [ if (xCoordinate, yCoordinate) == model.playerCoordinates then text "P"
       else if (xCoordinate, yCoordinate) == (model.currentZone.shop) then text "S"
@@ -148,27 +175,39 @@ drawZoneSquare model yCoordinate xCoordinate =
       else text " "
     ]
 
+drawMenu: Model -> Html Msg
+drawMenu model =
+  div []
+    [ button
+      [ onClick OpenMenu
+      , style "display" (if model.menuIsOpen then "none" else "block")]
+      [ text "Open Menu" ]
+    , div
+      [ style "border" "solid black 1px"
+      , style "display" (if model.menuIsOpen then "flex" else "none")
+      , style "flex-direction" "column"
+      , style "align-items" "center"]
+      [ div [ style "padding" "5px 10px" ] [ text "Menu" ]
+      , hr
+        [ style "width" "70%"
+        , style "color" "lightgray" ] []
+      , div [ style "padding" "5px 10px" ] [ button [] [ text "Party" ] ]
+      , div [ style "padding" "5px 10px" ] [ button [] [ text "Bag" ] ]
+      , div [ style "padding" "5px 10px" ] [ button [] [ text "Settings" ] ]
+      , div [ style "padding" "5px 10px" ] [ button [ onClick CloseMenu ] [ text "Close" ] ]
+      ]
+    ]
+
 view : Model -> Html Msg
 view model =
   div
   [ style "width" "100%"
   , style "height" "100vh"
   , style "display" "flex"
-  , style "flex-direction" "column"
+  , style "flex-direction" "row"
   , style "justify-content" "center"
   , style "align-items" "center"
   ]
-  [ div
-    [ style "display" "flex"
-    , style "flex-direction" "column"
-    ] (List.map (drawZoneRow model) (List.range 0 model.currentZone.height))
-  , div
-    [ style "margin" "10px 0"
-    ][ button [ onClick MovePlayerLeft ] [ text "Left" ]
-     , button [ onClick MovePlayerUp ] [ text "Up" ]
-     , button [ onClick MovePlayerDown ] [ text "Down" ]
-     , button [ onClick MovePlayerRight ] [ text "Right" ] ]
-  , div [ style "visibility" (if model.playerInShop then "visible" else "hidden") ]
-    [ text "You are in the shop"
-    , button [ onClick LeaveShop ] [ text "Leave Shop" ] ]
+  [ drawZoneAndControls model
+  , drawMenu model
   ]

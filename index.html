@@ -4508,6 +4508,7 @@ var $author$project$Main$init = {
 		width: 5
 	},
 	defaultZone: $author$project$Main$finalZone,
+	menuIsOpen: false,
 	playerCoordinates: _Utils_Tuple2(1, 1),
 	playerInShop: false,
 	remainingZones: _List_fromArray(
@@ -5359,6 +5360,8 @@ var $author$project$Main$moveToNewSpace = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'Reset':
+				return $author$project$Main$init;
 			case 'MovePlayerLeft':
 				return $author$project$Main$handleMapInteractions(
 					A2(
@@ -5403,23 +5406,173 @@ var $author$project$Main$update = F2(
 							},
 							model.playerCoordinates),
 						model));
-			default:
+			case 'LeaveShop':
 				return _Utils_update(
 					model,
 					{playerInShop: false});
+			case 'OpenMenu':
+				return _Utils_update(
+					model,
+					{menuIsOpen: true});
+			default:
+				return _Utils_update(
+					model,
+					{menuIsOpen: false});
 		}
 	});
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $author$project$Main$CloseMenu = {$: 'CloseMenu'};
+var $author$project$Main$OpenMenu = {$: 'OpenMenu'};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$hr = _VirtualDom_node('hr');
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$drawMenu = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Main$OpenMenu),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'display',
+						model.menuIsOpen ? 'none' : 'block')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Open Menu')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'display',
+						model.menuIsOpen ? 'flex' : 'none'),
+						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+						A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Menu')
+							])),
+						A2(
+						$elm$html$Html$hr,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'width', '70%'),
+								A2($elm$html$Html$Attributes$style, 'color', 'lightgray')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Party')
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Bag')
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Settings')
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Events$onClick($author$project$Main$CloseMenu)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Close')
+									]))
+							]))
+					]))
+			]));
+};
 var $author$project$Main$LeaveShop = {$: 'LeaveShop'};
 var $author$project$Main$MovePlayerDown = {$: 'MovePlayerDown'};
 var $author$project$Main$MovePlayerLeft = {$: 'MovePlayerLeft'};
 var $author$project$Main$MovePlayerRight = {$: 'MovePlayerRight'};
 var $author$project$Main$MovePlayerUp = {$: 'MovePlayerUp'};
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$drawZoneSquare = F3(
 	function (model, yCoordinate, xCoordinate) {
 		return A2(
@@ -5428,8 +5581,8 @@ var $author$project$Main$drawZoneSquare = F3(
 				[
 					A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
 					A2($elm$html$Html$Attributes$style, 'padding', '5px'),
-					A2($elm$html$Html$Attributes$style, 'width', '20px'),
-					A2($elm$html$Html$Attributes$style, 'height', '20px')
+					A2($elm$html$Html$Attributes$style, 'width', '40px'),
+					A2($elm$html$Html$Attributes$style, 'height', '40px')
 				]),
 			_List_fromArray(
 				[
@@ -5458,35 +5611,10 @@ var $author$project$Main$drawZoneRow = F2(
 				A2($author$project$Main$drawZoneSquare, model, yCoordinate),
 				A2($elm$core$List$range, 0, model.currentZone.width)));
 	});
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
-var $author$project$Main$view = function (model) {
+var $author$project$Main$drawZoneAndControls = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				A2($elm$html$Html$Attributes$style, 'width', '100%'),
-				A2($elm$html$Html$Attributes$style, 'height', '100vh'),
-				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
-				A2($elm$html$Html$Attributes$style, 'justify-content', 'center'),
-				A2($elm$html$Html$Attributes$style, 'align-items', 'center')
-			]),
+		_List_Nil,
 		_List_fromArray(
 			[
 				A2(
@@ -5504,7 +5632,9 @@ var $author$project$Main$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'margin', '10px 0')
+						A2($elm$html$Html$Attributes$style, 'margin', '10px 0'),
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'justify-content', 'space-around')
 					]),
 				_List_fromArray(
 					[
@@ -5555,8 +5685,8 @@ var $author$project$Main$view = function (model) {
 					[
 						A2(
 						$elm$html$Html$Attributes$style,
-						'visibility',
-						model.playerInShop ? 'visible' : 'hidden')
+						'display',
+						model.playerInShop ? 'block' : 'none')
 					]),
 				_List_fromArray(
 					[
@@ -5572,6 +5702,24 @@ var $author$project$Main$view = function (model) {
 								$elm$html$Html$text('Leave Shop')
 							]))
 					]))
+			]));
+};
+var $author$project$Main$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'width', '100%'),
+				A2($elm$html$Html$Attributes$style, 'height', '100vh'),
+				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'row'),
+				A2($elm$html$Html$Attributes$style, 'justify-content', 'center'),
+				A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+			]),
+		_List_fromArray(
+			[
+				$author$project$Main$drawZoneAndControls(model),
+				$author$project$Main$drawMenu(model)
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
