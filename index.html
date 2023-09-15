@@ -4465,6 +4465,7 @@ var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$Basics$False = {$: 'False'};
+var $elm$core$Basics$True = {$: 'True'};
 var $author$project$Main$finalZone = {
 	borders: _List_fromArray(
 		[
@@ -4494,6 +4495,12 @@ var $author$project$Main$finalZone = {
 	width: 4
 };
 var $author$project$Main$init = {
+	bag: _List_fromArray(
+		[
+			{description: 'Deals more damage, but takes recoil', itemInUse: false, name: 'Life Orb', playerHasFound: true},
+			{description: 'Heals a little bit every turn', itemInUse: false, name: 'Leftovers', playerHasFound: false}
+		]),
+	bagViewOpen: false,
 	currentZone: {
 		borders: _List_fromArray(
 			[
@@ -4508,11 +4515,12 @@ var $author$project$Main$init = {
 		width: 5
 	},
 	defaultZone: $author$project$Main$finalZone,
-	menuIsOpen: false,
+	menuViewOpen: false,
+	partyViewOpen: false,
 	playerCoordinates: _Utils_Tuple2(1, 1),
-	playerInShop: false,
 	remainingZones: _List_fromArray(
-		[$author$project$Main$finalZone])
+		[$author$project$Main$finalZone]),
+	shopViewOpen: false
 };
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -4900,7 +4908,6 @@ var $elm$core$Array$initialize = F2(
 			return A5($elm$core$Array$initializeHelp, fn, initialFromIndex, len, _List_Nil, tail);
 		}
 	});
-var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$Result$isOk = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -5289,7 +5296,7 @@ var $author$project$Main$advanceZone = function (model) {
 var $author$project$Main$enterShop = function (model) {
 	return _Utils_update(
 		model,
-		{playerInShop: true});
+		{shopViewOpen: true});
 };
 var $author$project$Main$handleMapInteractions = function (model) {
 	return _Utils_eq(model.playerCoordinates, model.currentZone.exit) ? $author$project$Main$advanceZone(model) : (_Utils_eq(model.playerCoordinates, model.currentZone.shop) ? $author$project$Main$enterShop(model) : model);
@@ -5409,22 +5416,75 @@ var $author$project$Main$update = F2(
 			case 'LeaveShop':
 				return _Utils_update(
 					model,
-					{playerInShop: false});
+					{shopViewOpen: false});
 			case 'OpenMenu':
 				return _Utils_update(
 					model,
-					{menuIsOpen: true});
+					{menuViewOpen: true});
+			case 'CloseMenu':
+				return _Utils_update(
+					model,
+					{menuViewOpen: false});
+			case 'OpenParty':
+				return _Utils_update(
+					model,
+					{partyViewOpen: true});
+			case 'CloseParty':
+				return _Utils_update(
+					model,
+					{partyViewOpen: false});
+			case 'OpenBag':
+				return _Utils_update(
+					model,
+					{bagViewOpen: true});
 			default:
 				return _Utils_update(
 					model,
-					{menuIsOpen: false});
+					{bagViewOpen: false});
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Main$CloseMenu = {$: 'CloseMenu'};
-var $author$project$Main$OpenMenu = {$: 'OpenMenu'};
+var $author$project$Main$CloseBag = {$: 'CloseBag'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$hr = _VirtualDom_node('hr');
+var $elm$core$Basics$not = _Basics_not;
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$drawBagItem = function (bagItem) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$Attributes$style,
+				'display',
+				((!bagItem.itemInUse) && bagItem.playerHasFound) ? 'block' : 'none'),
+				A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(bagItem.name)
+					])),
+				A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(bagItem.description)
+					]))
+			]));
+};
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5442,10 +5502,63 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$drawBag = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
+				A2($elm$html$Html$Attributes$style, 'margin', '5px'),
+				A2(
+				$elm$html$Html$Attributes$style,
+				'display',
+				model.bagViewOpen ? 'flex' : 'none'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Bag')
+					])),
+				A2(
+				$elm$html$Html$hr,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'width', '70%'),
+						A2($elm$html$Html$Attributes$style, 'color', 'lightgray')
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
+					]),
+				A2($elm$core$List$map, $author$project$Main$drawBagItem, model.bag)),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Main$CloseBag),
+						A2($elm$html$Html$Attributes$style, 'margin', '5px 10px')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Close')
+					]))
+			]));
+};
+var $author$project$Main$CloseMenu = {$: 'CloseMenu'};
+var $author$project$Main$OpenBag = {$: 'OpenBag'};
+var $author$project$Main$OpenMenu = {$: 'OpenMenu'};
 var $author$project$Main$drawMenu = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -5457,10 +5570,11 @@ var $author$project$Main$drawMenu = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Events$onClick($author$project$Main$OpenMenu),
+						A2($elm$html$Html$Attributes$style, 'margin', '5px'),
 						A2(
 						$elm$html$Html$Attributes$style,
 						'display',
-						model.menuIsOpen ? 'none' : 'block')
+						model.menuViewOpen ? 'none' : 'block')
 					]),
 				_List_fromArray(
 					[
@@ -5471,10 +5585,11 @@ var $author$project$Main$drawMenu = function (model) {
 				_List_fromArray(
 					[
 						A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
+						A2($elm$html$Html$Attributes$style, 'margin', '5px'),
 						A2(
 						$elm$html$Html$Attributes$style,
 						'display',
-						model.menuIsOpen ? 'flex' : 'none'),
+						model.menuViewOpen ? 'flex' : 'none'),
 						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
 						A2($elm$html$Html$Attributes$style, 'align-items', 'center')
 					]),
@@ -5524,7 +5639,10 @@ var $author$project$Main$drawMenu = function (model) {
 							[
 								A2(
 								$elm$html$Html$button,
-								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$Events$onClick($author$project$Main$OpenBag)
+									]),
 								_List_fromArray(
 									[
 										$elm$html$Html$text('Bag')
@@ -5686,7 +5804,7 @@ var $author$project$Main$drawZoneAndControls = function (model) {
 						A2(
 						$elm$html$Html$Attributes$style,
 						'display',
-						model.playerInShop ? 'block' : 'none')
+						model.shopViewOpen ? 'block' : 'none')
 					]),
 				_List_fromArray(
 					[
@@ -5714,12 +5832,14 @@ var $author$project$Main$view = function (model) {
 				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
 				A2($elm$html$Html$Attributes$style, 'flex-direction', 'row'),
 				A2($elm$html$Html$Attributes$style, 'justify-content', 'center'),
-				A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+				A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
+				A2($elm$html$Html$Attributes$style, 'text-align', 'center')
 			]),
 		_List_fromArray(
 			[
 				$author$project$Main$drawZoneAndControls(model),
-				$author$project$Main$drawMenu(model)
+				$author$project$Main$drawMenu(model),
+				$author$project$Main$drawBag(model)
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
