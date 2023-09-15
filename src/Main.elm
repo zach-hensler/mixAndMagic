@@ -23,6 +23,7 @@ main =
 ----------------------------
 
 type alias Coordinates = (Int, Int)
+type alias BagItem = { name: String, description: String, itemInUse: Bool, playerHasFound: Bool }
 
 type alias Zone =
   { borders: List Coordinates
@@ -37,8 +38,11 @@ type alias Model =
   , currentZone: Zone
   , remainingZones: List Zone
   , defaultZone: Zone
-  , playerInShop: Bool
-  , menuIsOpen: Bool}
+  , shopViewOpen: Bool
+  , menuViewOpen: Bool
+  , partyViewOpen: Bool
+  , bagViewOpen: Bool
+  , bag: List BagItem}
 
 init : Model
 init =
@@ -52,8 +56,13 @@ init =
     , height = 5 }
   , remainingZones = [finalZone]
   , defaultZone = finalZone
-  , playerInShop = False
-  , menuIsOpen = False}
+  , shopViewOpen = False
+  , menuViewOpen = False
+  , partyViewOpen = False
+  , bagViewOpen = False
+  , bag =
+    [ { name = "Life Orb", description = "Deals more damage, but takes recoil", itemInUse = False, playerHasFound = True }
+    , { name = "Leftovers", description = "Heals a little bit every turn", itemInUse = False, playerHasFound = False }]}
 
 finalZone: Zone
 finalZone =
@@ -83,6 +92,10 @@ type Msg
   | LeaveShop
   | OpenMenu
   | CloseMenu
+  | OpenParty
+  | CloseParty
+  | OpenBag
+  | CloseBag
 
 
 update: Msg -> Model -> Model
@@ -97,9 +110,13 @@ update msg model =
       moveToNewSpace (Tuple.mapSecond (\int -> int - 1) model.playerCoordinates) model |> handleMapInteractions
     MovePlayerDown ->
       moveToNewSpace (Tuple.mapSecond (\int -> int + 1) model.playerCoordinates) model |> handleMapInteractions
-    LeaveShop -> { model | playerInShop = False }
-    OpenMenu -> { model | menuIsOpen = True }
-    CloseMenu -> { model | menuIsOpen = False }
+    LeaveShop -> { model | shopViewOpen = False }
+    OpenMenu -> { model | menuViewOpen = True }
+    CloseMenu -> { model | menuViewOpen = False }
+    OpenParty -> { model | partyViewOpen = True }
+    CloseParty -> { model | partyViewOpen = False }
+    OpenBag -> { model | bagViewOpen = True }
+    CloseBag -> { model | bagViewOpen = False }
 
 moveToNewSpace: (Int, Int) -> Model -> Model
 moveToNewSpace newPlayerCoordinates model = { model | playerCoordinates =
@@ -131,7 +148,7 @@ advanceZone model =
   , remainingZones = List.tail model.remainingZones |> Maybe.withDefault []
   , playerCoordinates = newZone.entrance }
 
-enterShop model = { model | playerInShop = True }
+enterShop model = { model | shopViewOpen = True }
 
 ----------------------------
 -- VIEW --------------------
@@ -152,7 +169,7 @@ drawZoneAndControls model =
       , button [ onClick MovePlayerUp ] [ text "Up" ]
       , button [ onClick MovePlayerDown ] [ text "Down" ]
       , button [ onClick MovePlayerRight ] [ text "Right" ] ]
-    , div [ style "display" (if model.playerInShop then "block" else "none") ]
+    , div [ style "display" (if model.shopViewOpen then "block" else "none") ]
         [ text "You are in the shop"
       , button [ onClick LeaveShop ] [ text "Leave Shop" ] ] ]
 
@@ -180,23 +197,45 @@ drawMenu model =
   div []
     [ button
       [ onClick OpenMenu
-      , style "display" (if model.menuIsOpen then "none" else "block")]
-      [ text "Open Menu" ]
+      , style "margin" "5px"
+      , style "display" (if model.menuViewOpen then "none" else "block")] [ text "Open Menu" ]
     , div
       [ style "border" "solid black 1px"
-      , style "display" (if model.menuIsOpen then "flex" else "none")
+      , style "margin" "5px"
+      , style "display" (if model.menuViewOpen then "flex" else "none")
       , style "flex-direction" "column"
       , style "align-items" "center"]
       [ div [ style "padding" "5px 10px" ] [ text "Menu" ]
-      , hr
-        [ style "width" "70%"
-        , style "color" "lightgray" ] []
+      , hr [ style "width" "70%", style "color" "lightgray" ] []
       , div [ style "padding" "5px 10px" ] [ button [] [ text "Party" ] ]
-      , div [ style "padding" "5px 10px" ] [ button [] [ text "Bag" ] ]
+      , div [ style "padding" "5px 10px" ] [ button [ onClick OpenBag ] [ text "Bag" ] ]
       , div [ style "padding" "5px 10px" ] [ button [] [ text "Settings" ] ]
       , div [ style "padding" "5px 10px" ] [ button [ onClick CloseMenu ] [ text "Close" ] ]
       ]
     ]
+
+drawBag: Model -> Html Msg
+drawBag model =
+  div
+    [ style "border" "solid black 1px"
+    , style "margin" "5px"
+    , style "display" (if (model.bagViewOpen) then "flex" else "none" )
+    , style "flex-direction" "column"]
+  [ div [ style "padding" "5px 10px" ] [text "Bag"]
+  , hr [ style "width" "70%", style "color" "lightgray" ] []
+  , div
+    [ style "display" "flex"
+    , style "flex-direction" "column"] (List.map drawBagItem model.bag)
+  , button [ onClick CloseBag, style "margin" "5px 10px" ] [ text "Close" ] ]
+
+drawBagItem: BagItem -> Html Msg
+drawBagItem bagItem =
+  div
+    [ style "display" (if (not bagItem.itemInUse && bagItem.playerHasFound) then "block" else "none" )
+    , style "padding" "5px 10px"]
+    [ div [ style "font-weight" "bold" ] [text bagItem.name]
+    , hr [] []
+    , div [] [ text bagItem.description ]]
 
 view : Model -> Html Msg
 view model =
@@ -207,7 +246,9 @@ view model =
   , style "flex-direction" "row"
   , style "justify-content" "center"
   , style "align-items" "center"
+  , style "text-align" "center"
   ]
   [ drawZoneAndControls model
   , drawMenu model
+  , drawBag model
   ]
