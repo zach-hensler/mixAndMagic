@@ -24,14 +24,15 @@ main =
 
 type alias Coordinates = (Int, Int)
 type alias BagItem = { name: String, description: String, numberAvailable: Int, numberOwned: Int }
+type alias PartyMember = { class: String, elementalType: String, heldItem: String }
 
 type alias Zone =
   { borders: List Coordinates
   , entrance: Coordinates
   , exit: Coordinates
   , shop: Coordinates
-  , width: Int,
-  height: Int }
+  , width: Int
+  , height: Int}
 
 type alias Model =
   { playerCoordinates: Coordinates
@@ -42,7 +43,8 @@ type alias Model =
   , menuViewOpen: Bool
   , partyViewOpen: Bool
   , bagViewOpen: Bool
-  , bag: List BagItem}
+  , bag: List BagItem
+  , party: List PartyMember}
 
 init : Model
 init =
@@ -62,7 +64,10 @@ init =
   , bagViewOpen = False
   , bag =
     [ { name = "Life Orb", description = "Deals more damage, but takes recoil", numberAvailable = 0, numberOwned = 1 }
-    , { name = "Leftovers", description = "Heals a little bit every turn", numberAvailable = 0, numberOwned = 1 }]}
+    , { name = "Leftovers", description = "Heals a little bit every turn", numberAvailable = 0, numberOwned = 1 }]
+  , party =
+    [ { class = "Mage", elementalType = "Fire", heldItem = "Life Orb" }
+    , { class = "Healer", elementalType = "Light", heldItem = "Leftovers" }]}
 
 finalZone: Zone
 finalZone =
@@ -207,9 +212,8 @@ drawMenu model =
       , style "align-items" "center"]
       [ div [ style "padding" "5px 10px" ] [ text "Menu" ]
       , hr [ style "width" "70%", style "color" "lightgray" ] []
-      , div [ style "padding" "5px 10px" ] [ button [] [ text "Party" ] ]
+      , div [ style "padding" "5px 10px" ] [ button [ onClick OpenParty ] [ text "Party" ] ]
       , div [ style "padding" "5px 10px" ] [ button [ onClick OpenBag ] [ text "Bag" ] ]
-      , div [ style "padding" "5px 10px" ] [ button [] [ text "Settings" ] ]
       , div [ style "padding" "5px 10px" ] [ button [ onClick CloseMenu ] [ text "Close" ] ]
       ]
     ]
@@ -238,6 +242,27 @@ drawBagItem bagItem =
       [ div [ style "width" "70%" ] [ text bagItem.description ]
       , div [ style "width" "30%" ] [ text (String.fromInt bagItem.numberAvailable ++ "/" ++ String.fromInt bagItem.numberOwned) ]]]
 
+drawParty: Model -> Html Msg
+drawParty model =
+  div
+    [ style "border" "solid black 1px"
+    , style "margin" "5px"
+    , style "display" (if (model.partyViewOpen) then "flex" else "none" )
+    , style "flex-direction" "column"]
+  [ div [ style "padding" "5px 10px" ] [text "Party"]
+  , div
+    [ style "display" "flex"
+    , style "flex-direction" "column"] (List.map drawPartyItem model.party)
+  , button [ onClick CloseParty, style "margin" "5px 10px" ] [ text "Close" ] ]
+
+drawPartyItem: PartyMember -> Html Msg
+drawPartyItem partyMember =
+  div
+    [ style "padding" "5px 10px"]
+    [ hr [ style "width" "85%", style "color" "lightgray" ] []
+    , div [ style "font-weight" "bold" ] [text (partyMember.elementalType ++ " " ++ partyMember.class) ]
+    , div [ style "display" (if (String.isEmpty partyMember.heldItem) then "none" else "block") ] [text ("holding: " ++ partyMember.heldItem)]]
+
 view : Model -> Html Msg
 view model =
   div
@@ -252,4 +277,5 @@ view model =
   [ drawZoneAndControls model
   , drawMenu model
   , drawBag model
+  , drawParty model
   ]
