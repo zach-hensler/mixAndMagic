@@ -23,7 +23,7 @@ main =
 ----------------------------
 
 type alias Coordinates = (Int, Int)
-type alias BagItem = { name: String, description: String, itemInUse: Bool, playerHasFound: Bool }
+type alias BagItem = { name: String, description: String, numberAvailable: Int, numberOwned: Int }
 
 type alias Zone =
   { borders: List Coordinates
@@ -61,8 +61,8 @@ init =
   , partyViewOpen = False
   , bagViewOpen = False
   , bag =
-    [ { name = "Life Orb", description = "Deals more damage, but takes recoil", itemInUse = False, playerHasFound = True }
-    , { name = "Leftovers", description = "Heals a little bit every turn", itemInUse = False, playerHasFound = False }]}
+    [ { name = "Life Orb", description = "Deals more damage, but takes recoil", numberAvailable = 0, numberOwned = 1 }
+    , { name = "Leftovers", description = "Heals a little bit every turn", numberAvailable = 0, numberOwned = 1 }]}
 
 finalZone: Zone
 finalZone =
@@ -112,7 +112,7 @@ update msg model =
       moveToNewSpace (Tuple.mapSecond (\int -> int + 1) model.playerCoordinates) model |> handleMapInteractions
     LeaveShop -> { model | shopViewOpen = False }
     OpenMenu -> { model | menuViewOpen = True }
-    CloseMenu -> { model | menuViewOpen = False }
+    CloseMenu -> { model | menuViewOpen = False, bagViewOpen = False, partyViewOpen = False }
     OpenParty -> { model | partyViewOpen = True }
     CloseParty -> { model | partyViewOpen = False }
     OpenBag -> { model | bagViewOpen = True }
@@ -222,7 +222,6 @@ drawBag model =
     , style "display" (if (model.bagViewOpen) then "flex" else "none" )
     , style "flex-direction" "column"]
   [ div [ style "padding" "5px 10px" ] [text "Bag"]
-  , hr [ style "width" "70%", style "color" "lightgray" ] []
   , div
     [ style "display" "flex"
     , style "flex-direction" "column"] (List.map drawBagItem model.bag)
@@ -231,11 +230,13 @@ drawBag model =
 drawBagItem: BagItem -> Html Msg
 drawBagItem bagItem =
   div
-    [ style "display" (if (not bagItem.itemInUse && bagItem.playerHasFound) then "block" else "none" )
-    , style "padding" "5px 10px"]
-    [ div [ style "font-weight" "bold" ] [text bagItem.name]
-    , hr [] []
-    , div [] [ text bagItem.description ]]
+    [ style "padding" "5px 10px"]
+    [ hr [ style "width" "85%", style "color" "lightgray" ] []
+    , div [ style "font-weight" "bold" ] [text bagItem.name]
+    , div
+      [ style "display" "flex"]
+      [ div [ style "width" "70%" ] [ text bagItem.description ]
+      , div [ style "width" "30%" ] [ text (String.fromInt bagItem.numberAvailable ++ "/" ++ String.fromInt bagItem.numberOwned) ]]]
 
 view : Model -> Html Msg
 view model =
