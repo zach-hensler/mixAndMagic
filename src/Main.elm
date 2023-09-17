@@ -42,9 +42,11 @@ type alias Model =
   , shopViewOpen: Bool
   , menuViewOpen: Bool
   , partyViewOpen: Bool
+  , reserveViewOpen: Bool
   , bagViewOpen: Bool
   , bag: List BagItem
-  , party: List PartyMember}
+  , party: List PartyMember
+  , reserveParty: List PartyMember}
 
 init : Model
 init =
@@ -61,13 +63,15 @@ init =
   , shopViewOpen = False
   , menuViewOpen = False
   , partyViewOpen = False
+  , reserveViewOpen = False
   , bagViewOpen = False
   , bag =
     [ { name = "Life Orb", description = "Deals more damage, but takes recoil", numberAvailable = 0, numberOwned = 1 }
     , { name = "Leftovers", description = "Heals a little bit every turn", numberAvailable = 0, numberOwned = 1 }]
   , party =
     [ { class = "Mage", elementalType = "Fire", heldItem = "Life Orb" }
-    , { class = "Healer", elementalType = "Light", heldItem = "Leftovers" }]}
+    , { class = "Healer", elementalType = "Light", heldItem = "Leftovers" }]
+  , reserveParty = []}
 
 finalZone: Zone
 finalZone =
@@ -99,8 +103,12 @@ type Msg
   | CloseMenu
   | OpenParty
   | CloseParty
+  | OpenReserve
+  | CloseReserve
   | OpenBag
   | CloseBag
+  | MovePartyMemberToReserve PartyMember
+  | MoveReserveMemberToParty PartyMember
 
 
 update: Msg -> Model -> Model
@@ -120,8 +128,21 @@ update msg model =
     CloseMenu -> { model | menuViewOpen = False, bagViewOpen = False, partyViewOpen = False }
     OpenParty -> { model | partyViewOpen = True }
     CloseParty -> { model | partyViewOpen = False }
+    OpenReserve -> { model | reserveViewOpen = True }
+    CloseReserve -> { model | reserveViewOpen = False }
     OpenBag -> { model | bagViewOpen = True }
     CloseBag -> { model | bagViewOpen = False }
+    MovePartyMemberToReserve member ->
+      { model
+      | party = List.filter (isNotSamePartyMember member) model.party
+      , reserveParty = List.append model.reserveParty [member]}
+    MoveReserveMemberToParty member ->
+      { model
+      | reserveParty = List.filter (isNotSamePartyMember member) model.reserveParty
+      , party = List.append model.party [member]}
+
+isNotSamePartyMember: PartyMember -> PartyMember -> Bool
+isNotSamePartyMember member1 member2 = not (member1 == member2)
 
 moveToNewSpace: (Int, Int) -> Model -> Model
 moveToNewSpace newPlayerCoordinates model = { model | playerCoordinates =
@@ -213,6 +234,7 @@ drawMenu model =
       [ div [ style "padding" "5px 10px" ] [ text "Menu" ]
       , hr [ style "width" "70%", style "color" "lightgray" ] []
       , div [ style "padding" "5px 10px" ] [ button [ onClick OpenParty ] [ text "Party" ] ]
+      , div [ style "padding" "5px 10px" ] [ button [ onClick OpenReserve ] [ text "Reserve" ] ]
       , div [ style "padding" "5px 10px" ] [ button [ onClick OpenBag ] [ text "Bag" ] ]
       , div [ style "padding" "5px 10px" ] [ button [ onClick CloseMenu ] [ text "Close" ] ]
       ]
@@ -252,16 +274,39 @@ drawParty model =
   [ div [ style "padding" "5px 10px" ] [text "Party"]
   , div
     [ style "display" "flex"
-    , style "flex-direction" "column"] (List.map drawPartyItem model.party)
+    , style "flex-direction" "column"] (List.map drawPartyMember model.party)
   , button [ onClick CloseParty, style "margin" "5px 10px" ] [ text "Close" ] ]
 
-drawPartyItem: PartyMember -> Html Msg
-drawPartyItem partyMember =
+drawPartyMember: PartyMember -> Html Msg
+drawPartyMember partyMember =
   div
     [ style "padding" "5px 10px"]
     [ hr [ style "width" "85%", style "color" "lightgray" ] []
     , div [ style "font-weight" "bold" ] [text (partyMember.elementalType ++ " " ++ partyMember.class) ]
-    , div [ style "display" (if (String.isEmpty partyMember.heldItem) then "none" else "block") ] [text ("holding: " ++ partyMember.heldItem)]]
+    , div [ style "display" (if (String.isEmpty partyMember.heldItem) then "none" else "block") ] [text ("holding: " ++ partyMember.heldItem)]
+    , div [] [ button [ onClick (MovePartyMemberToReserve partyMember) ] [ text "Move to Reserve" ] ]]
+
+drawReserve: Model -> Html Msg
+drawReserve model =
+  div
+    [ style "border" "solid black 1px"
+    , style "margin" "5px"
+    , style "display" (if (model.reserveViewOpen) then "flex" else "none" )
+    , style "flex-direction" "column"]
+  [ div [ style "padding" "5px 10px" ] [text "Reserve"]
+  , div
+    [ style "display" "flex"
+    , style "flex-direction" "column"] (List.map drawReserveMember model.reserveParty)
+  , button [ onClick CloseReserve, style "margin" "5px 10px" ] [ text "Close" ] ]
+
+drawReserveMember: PartyMember -> Html Msg
+drawReserveMember reserveMember =
+  div
+    [ style "padding" "5px 10px"]
+    [ hr [ style "width" "85%", style "color" "lightgray" ] []
+    , div [ style "font-weight" "bold" ] [text (reserveMember.elementalType ++ " " ++ reserveMember.class) ]
+    , div [ style "display" (if (String.isEmpty reserveMember.heldItem) then "none" else "block") ] [text ("holding: " ++ reserveMember.heldItem)]
+    , div [] [ button [ onClick (MoveReserveMemberToParty reserveMember) ] [ text "Move to Party" ] ]]
 
 view : Model -> Html Msg
 view model =
@@ -278,4 +323,5 @@ view model =
   , drawMenu model
   , drawBag model
   , drawParty model
+  , drawReserve model
   ]

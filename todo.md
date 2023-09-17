@@ -1,10 +1,11 @@
 # Features
 ## MVP Features
 ### General Mechanics
-- add menu functionality
-- add party
-- add bag
-- add shop mechanics
+- add ability to add new party members
+- add max amount of members in (party + reserve)
+- add ability to give party members different held items
+- improve shop view
+- add ability to buy items from the shop
 - add keyboard event listener for movement
 - add click events for mobile movement/selection
 - save data in local storage
