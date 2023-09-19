@@ -17,6 +17,12 @@ main =
   Browser.sandbox { init = init, update = update, view = view }
 
 
+----------------------------
+-- CONSTANTS ---------------
+----------------------------
+
+maxPartySize: Int
+maxPartySize = 3
 
 ----------------------------
 -- MODEL -------------------
@@ -109,6 +115,8 @@ type Msg
   | CloseBag
   | MovePartyMemberToReserve PartyMember
   | MoveReserveMemberToParty PartyMember
+  | AddNewMember PartyMember
+  --| GiveItemToMember PartyMember BagItem
 
 
 update: Msg -> Model -> Model
@@ -125,7 +133,7 @@ update msg model =
       moveToNewSpace (Tuple.mapSecond (\int -> int + 1) model.playerCoordinates) model |> handleMapInteractions
     LeaveShop -> { model | shopViewOpen = False }
     OpenMenu -> { model | menuViewOpen = True }
-    CloseMenu -> { model | menuViewOpen = False, bagViewOpen = False, partyViewOpen = False }
+    CloseMenu -> { model | menuViewOpen = False, bagViewOpen = False, partyViewOpen = False, reserveViewOpen = False }
     OpenParty -> { model | partyViewOpen = True }
     CloseParty -> { model | partyViewOpen = False }
     OpenReserve -> { model | reserveViewOpen = True }
@@ -137,9 +145,20 @@ update msg model =
       | party = List.filter (isNotSamePartyMember member) model.party
       , reserveParty = List.append model.reserveParty [member]}
     MoveReserveMemberToParty member ->
-      { model
+      if List.length model.party < maxPartySize
+      then { model
       | reserveParty = List.filter (isNotSamePartyMember member) model.reserveParty
       , party = List.append model.party [member]}
+      else model
+    AddNewMember member ->
+      if List.length model.party >= maxPartySize
+      then { model | reserveParty = List.append model.reserveParty [member] }
+      else { model | party = List.append model.party [member] }
+    --GiveItemToMember member item ->
+    --  if (member.heldItem == "")
+    --  then { model |  }
+    --  else
+
 
 isNotSamePartyMember: PartyMember -> PartyMember -> Bool
 isNotSamePartyMember member1 member2 = not (member1 == member2)
@@ -179,6 +198,25 @@ enterShop model = { model | shopViewOpen = True }
 ----------------------------
 -- VIEW --------------------
 ----------------------------
+
+view : Model -> Html Msg
+view model =
+  div
+  [ style "width" "100%"
+  , style "height" "100vh"
+  , style "display" "flex"
+  , style "flex-direction" "row"
+  , style "justify-content" "center"
+  , style "align-items" "center"
+  , style "text-align" "center"
+  ]
+  [ drawZoneAndControls model
+  , drawMenu model
+  , drawBag model
+  , drawParty model
+  , drawReserve model
+  , drawAddNewMemberButton model
+  ]
 
 drawZoneAndControls: Model -> Html Msg
 drawZoneAndControls model =
@@ -299,6 +337,35 @@ drawReserve model =
     , style "flex-direction" "column"] (List.map drawReserveMember model.reserveParty)
   , button [ onClick CloseReserve, style "margin" "5px 10px" ] [ text "Close" ] ]
 
+drawAddNewMemberButton: Model -> Html Msg
+drawAddNewMemberButton model =
+  div []
+    [ button
+      [ onClick (AddNewMember
+        { class = "Mage"-- Random.generate getRandomClass
+        , elementalType = "Dark"-- Random.map getRandomClass
+        , heldItem = "" } )]
+      [ text "Add new member" ]]
+
+--getRandomClass: Random.Generator String
+--getRandomClass = Random.Pcg.sample
+  --let randomNumber = Random.int 0 3 in
+  --case randomNumber of
+  --  0 -> "Cleric"
+  --  1 -> "Mage"
+  --  2 -> "Fighter"
+  --  _ -> "Tank"
+
+--getRandomType: String
+--getRandomType =
+--  let randomNumber = Random.int 0 4 in
+--   case randomNumber of
+--     0 -> "Fire"
+--     1 -> "Water"
+--     2 -> "Earth"
+--     3 -> "Light"
+--     _ -> "Dark"
+
 drawReserveMember: PartyMember -> Html Msg
 drawReserveMember reserveMember =
   div
@@ -307,21 +374,3 @@ drawReserveMember reserveMember =
     , div [ style "font-weight" "bold" ] [text (reserveMember.elementalType ++ " " ++ reserveMember.class) ]
     , div [ style "display" (if (String.isEmpty reserveMember.heldItem) then "none" else "block") ] [text ("holding: " ++ reserveMember.heldItem)]
     , div [] [ button [ onClick (MoveReserveMemberToParty reserveMember) ] [ text "Move to Party" ] ]]
-
-view : Model -> Html Msg
-view model =
-  div
-  [ style "width" "100%"
-  , style "height" "100vh"
-  , style "display" "flex"
-  , style "flex-direction" "row"
-  , style "justify-content" "center"
-  , style "align-items" "center"
-  , style "text-align" "center"
-  ]
-  [ drawZoneAndControls model
-  , drawMenu model
-  , drawBag model
-  , drawParty model
-  , drawReserve model
-  ]
