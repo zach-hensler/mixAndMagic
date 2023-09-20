@@ -5,9 +5,6 @@
 - allow multiple members of the same class & type
   - (currently buggy w/ moving members to/from reserve)
   - could give all members a uuid to differentiate
-- add ability to give party members different held items
-- add ability to return held items
-  - either when given a new item or explicitly returning one
 - add ability to remove party members?
 
 ### Shop
