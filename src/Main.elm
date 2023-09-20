@@ -30,7 +30,8 @@ maxPartySize = 3
 
 type alias Coordinates = (Int, Int)
 type alias BagItem = { name: String, description: String, numberAvailable: Int, numberOwned: Int }
-type alias PartyMember = { class: String, elementalType: String, heldItem: String }
+type alias PartyMember = { class: String, elementalType: String, heldItem: Maybe BagItem }
+type ItemAssignmentView = ItemAssignmentViewClosed | ItemAssignmentViewOpen BagItem
 
 type alias Zone =
   { borders: List Coordinates
@@ -50,6 +51,7 @@ type alias Model =
   , partyViewOpen: Bool
   , reserveViewOpen: Bool
   , bagViewOpen: Bool
+  , itemAssignmentView: ItemAssignmentView
   , bag: List BagItem
   , party: List PartyMember
   , reserveParty: List PartyMember}
@@ -71,12 +73,13 @@ init =
   , partyViewOpen = False
   , reserveViewOpen = False
   , bagViewOpen = False
+  , itemAssignmentView = ItemAssignmentViewClosed
   , bag =
-    [ { name = "Life Orb", description = "Deals more damage, but takes recoil", numberAvailable = 0, numberOwned = 1 }
-    , { name = "Leftovers", description = "Heals a little bit every turn", numberAvailable = 0, numberOwned = 1 }]
+    [ { name = "Life Orb", description = "Deals more damage, but takes recoil", numberAvailable = 1, numberOwned = 1 }
+    , { name = "Leftovers", description = "Heals a little bit every turn", numberAvailable = 1, numberOwned = 1 }]
   , party =
-    [ { class = "Mage", elementalType = "Fire", heldItem = "Life Orb" }
-    , { class = "Healer", elementalType = "Light", heldItem = "Leftovers" }]
+    [ { class = "Mage", elementalType = "Fire", heldItem = Nothing }
+    , { class = "Healer", elementalType = "Light", heldItem = Nothing }]
   , reserveParty = []}
 
 finalZone: Zone
@@ -116,7 +119,10 @@ type Msg
   | MovePartyMemberToReserve PartyMember
   | MoveReserveMemberToParty PartyMember
   | AddNewMember PartyMember
-  --| GiveItemToMember PartyMember BagItem
+  | OpenItemAssigment BagItem
+  | CloseItemAssignment
+  | PerformItemAssignment PartyMember BagItem
+  | ReturnAssignedItem PartyMember
 
 
 update: Msg -> Model -> Model
@@ -154,11 +160,33 @@ update msg model =
       if List.length model.party >= maxPartySize
       then { model | reserveParty = List.append model.reserveParty [member] }
       else { model | party = List.append model.party [member] }
-    --GiveItemToMember member item ->
-    --  if (member.heldItem == "")
-    --  then { model |  }
-    --  else
+    OpenItemAssigment item ->
+      { model
+      | itemAssignmentView = if item.numberAvailable > 0 then (ItemAssignmentViewOpen item) else ItemAssignmentViewClosed }
+    CloseItemAssignment -> { model | itemAssignmentView = ItemAssignmentViewClosed }
+    PerformItemAssignment member item ->
+      let newItem = { item | numberAvailable = item.numberAvailable - 1 } in
+      if (member.heldItem == Nothing)
+      then { model
+           | party = replacePartyMember { member | heldItem = Just newItem } member model.party
+           , bag = replaceBagItem newItem item model.bag
+           , itemAssignmentView = ItemAssignmentViewClosed}
+      else model
+    ReturnAssignedItem member ->
+      case member.heldItem of
+        Nothing -> model
+        Just item -> { model
+                | party = replacePartyMember { member | heldItem = Nothing } member model.party
+                , bag = replaceBagItem { item | numberAvailable = item.numberAvailable + 1 } item model.bag
+                , itemAssignmentView = ItemAssignmentViewClosed}
 
+replaceBagItem: BagItem -> BagItem -> List BagItem -> List BagItem
+replaceBagItem newItem oldItem itemList =
+  List.map (\i -> if i == oldItem then newItem else i) itemList
+
+replacePartyMember: PartyMember -> PartyMember -> List PartyMember -> List PartyMember
+replacePartyMember newMember oldMember memberList =
+  List.map (\m -> if m == oldMember then newMember else m) memberList
 
 isNotSamePartyMember: PartyMember -> PartyMember -> Bool
 isNotSamePartyMember member1 member2 = not (member1 == member2)
@@ -213,6 +241,7 @@ view model =
   [ drawZoneAndControls model
   , drawMenu model
   , drawBag model
+  , drawItemAssignment model
   , drawParty model
   , drawReserve model
   , drawAddNewMemberButton model
@@ -300,7 +329,32 @@ drawBagItem bagItem =
     , div
       [ style "display" "flex"]
       [ div [ style "width" "70%" ] [ text bagItem.description ]
-      , div [ style "width" "30%" ] [ text (String.fromInt bagItem.numberAvailable ++ "/" ++ String.fromInt bagItem.numberOwned) ]]]
+      , div [ style "width" "30%" ] [ text (String.fromInt bagItem.numberAvailable ++ "/" ++ String.fromInt bagItem.numberOwned) ]]
+    , button
+      [ style "width" "100%"
+      , style "display" (if (bagItem.numberAvailable > 0) then "block" else "none")
+      , onClick (OpenItemAssigment bagItem) ]
+      [ text "Assign" ]]
+
+drawItemAssignment: Model -> Html Msg
+drawItemAssignment model =
+  case model.itemAssignmentView of
+    ItemAssignmentViewClosed -> div [ style "display" "none" ] []
+    ItemAssignmentViewOpen item ->
+      div
+        [ style "border" "solid black 1px"
+        , style "margin" "5px"
+        , style "flex-direction" "column"]
+        [ div [ style "padding" "5px 10px" ] [text ("Assign " ++ item.name ++ " to:") ]
+        , div
+          [ style "display" "flex"
+          , style "flex-direction" "column"] (List.map (drawItemAssignmentPartyMember item) model.party)
+          , button [ onClick CloseItemAssignment, style "margin" "5px 10px" ] [ text "Close" ]]
+
+drawItemAssignmentPartyMember: BagItem -> PartyMember -> Html Msg
+drawItemAssignmentPartyMember item partyMember =
+  button
+    [onClick (PerformItemAssignment partyMember item)] [ text (partyMember.elementalType ++ partyMember.class) ]
 
 drawParty: Model -> Html Msg
 drawParty model =
@@ -313,7 +367,7 @@ drawParty model =
   , div
     [ style "display" "flex"
     , style "flex-direction" "column"] (List.map drawPartyMember model.party)
-  , button [ onClick CloseParty, style "margin" "5px 10px" ] [ text "Close" ] ]
+  , button [ onClick CloseParty, style "margin" "5px 10px" ] [ text "Close" ]]
 
 drawPartyMember: PartyMember -> Html Msg
 drawPartyMember partyMember =
@@ -321,8 +375,17 @@ drawPartyMember partyMember =
     [ style "padding" "5px 10px"]
     [ hr [ style "width" "85%", style "color" "lightgray" ] []
     , div [ style "font-weight" "bold" ] [text (partyMember.elementalType ++ " " ++ partyMember.class) ]
-    , div [ style "display" (if (String.isEmpty partyMember.heldItem) then "none" else "block") ] [text ("holding: " ++ partyMember.heldItem)]
+    , drawPartyMemberHeldItem partyMember.heldItem
+    , div
+      [ style "display" (if (partyMember.heldItem == Nothing) then "none" else "block")]
+      [ button [ onClick (ReturnAssignedItem partyMember) ] [text "Return Item"] ]
     , div [] [ button [ onClick (MovePartyMemberToReserve partyMember) ] [ text "Move to Reserve" ] ]]
+
+drawPartyMemberHeldItem: Maybe BagItem -> Html Msg
+drawPartyMemberHeldItem bagItem =
+  case bagItem of
+    Nothing -> div [ style "display" "none" ] []
+    Just item -> div [] [text ("holding: " ++ item.name)]
 
 drawReserve: Model -> Html Msg
 drawReserve model =
@@ -344,7 +407,7 @@ drawAddNewMemberButton model =
       [ onClick (AddNewMember
         { class = "Mage"-- Random.generate getRandomClass
         , elementalType = "Dark"-- Random.map getRandomClass
-        , heldItem = "" } )]
+        , heldItem = Nothing } )]
       [ text "Add new member" ]]
 
 --getRandomClass: Random.Generator String
@@ -372,5 +435,11 @@ drawReserveMember reserveMember =
     [ style "padding" "5px 10px"]
     [ hr [ style "width" "85%", style "color" "lightgray" ] []
     , div [ style "font-weight" "bold" ] [text (reserveMember.elementalType ++ " " ++ reserveMember.class) ]
-    , div [ style "display" (if (String.isEmpty reserveMember.heldItem) then "none" else "block") ] [text ("holding: " ++ reserveMember.heldItem)]
+    , drawReserveMemberHeldItem reserveMember.heldItem
     , div [] [ button [ onClick (MoveReserveMemberToParty reserveMember) ] [ text "Move to Party" ] ]]
+
+drawReserveMemberHeldItem: Maybe BagItem -> Html Msg
+drawReserveMemberHeldItem bagItem =
+  case bagItem of
+    Nothing -> div [ style "display" "none" ] []
+    Just item -> div [] [text ("holding: " ++ item.name)]
