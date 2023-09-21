@@ -169,20 +169,27 @@ update msg model =
       | itemAssignmentView = if item.numberAvailable > 0 then (ItemAssignmentViewOpen item) else ItemAssignmentViewClosed }
     CloseItemAssignment -> { model | itemAssignmentView = ItemAssignmentViewClosed }
     PerformItemAssignment member item ->
-      let newItem = { item | numberAvailable = item.numberAvailable - 1 } in
       if (member.heldItem == Nothing)
-      then { model
-           | party = replacePartyMember { member | heldItem = Just newItem } member model.party
-           , bag = replaceBagItem newItem item model.bag
-           , itemAssignmentView = ItemAssignmentViewClosed}
-      else model
-    ReturnAssignedItem member ->
-      case member.heldItem of
-        Nothing -> model
-        Just item -> { model
-                | party = replacePartyMember { member | heldItem = Nothing } member model.party
-                , bag = replaceBagItem { item | numberAvailable = item.numberAvailable + 1 } item model.bag
-                , itemAssignmentView = ItemAssignmentViewClosed}
+      then assignItem member item model
+      else (returnAssignedItem model member) |> (assignItem member item)
+    ReturnAssignedItem member -> returnAssignedItem model member
+
+assignItem: PartyMember -> BagItem -> Model -> Model
+assignItem member item model =
+  let newItem = { item | numberAvailable = item.numberAvailable - 1 } in
+  { model
+  | party = replacePartyMember { member | heldItem = Just newItem } { member | heldItem = Nothing } model.party
+  , bag = replaceBagItem newItem item model.bag
+  , itemAssignmentView = ItemAssignmentViewClosed}
+
+returnAssignedItem: Model -> PartyMember -> Model
+returnAssignedItem model member =
+  case member.heldItem of
+    Nothing -> model
+    Just item -> { model
+            | party = replacePartyMember { member | heldItem = Nothing } member model.party
+            , bag = replaceBagItem { item | numberAvailable = item.numberAvailable + 1 } item model.bag
+            , itemAssignmentView = ItemAssignmentViewClosed}
 
 replaceBagItem: BagItem -> BagItem -> List BagItem -> List BagItem
 replaceBagItem newItem oldItem itemList =
