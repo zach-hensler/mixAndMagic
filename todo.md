@@ -13,6 +13,7 @@
 - add ability to buy items from the shop
 
 ### ETC
+- find a better way to check for item/player equality than deep comparison
 - add keyboard event listener for movement
 - add click events for mobile movement/selection
 - save data in local storage

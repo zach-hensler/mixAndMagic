@@ -4502,7 +4502,8 @@ var $author$project$Main$init = {
 			{description: 'Take 10% less damage from attacks', name: 'Protective Pendant', numberAvailable: 1, numberOwned: 1},
 			{description: 'Your first attack deals explosive damage and blinds foes', name: 'Holy Hand-grenade', numberAvailable: 1, numberOwned: 1},
 			{description: 'Your magic attacks take an extra turn to charge, but deal 3x damage', name: 'Channeling Staff', numberAvailable: 1, numberOwned: 1},
-			{description: 'Take 20% less damage, but take 2x fire damage', name: 'Wooden Shield', numberAvailable: 1, numberOwned: 1}
+			{description: 'Take 20% less damage, but take 2x fire damage', name: 'Wooden Shield', numberAvailable: 1, numberOwned: 1},
+			{description: 'A hat so ugly that enemies are sure to target you first', name: 'Hideous Hat', numberAvailable: 1, numberOwned: 1}
 		]),
 	bagViewOpen: false,
 	currentZone: {
@@ -5273,6 +5274,47 @@ var $elm$core$List$append = F2(
 			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
 		}
 	});
+var $author$project$Main$replaceBagItem = F3(
+	function (newItem, oldItem, itemList) {
+		return A2(
+			$elm$core$List$map,
+			function (i) {
+				return _Utils_eq(i, oldItem) ? newItem : i;
+			},
+			itemList);
+	});
+var $author$project$Main$replacePartyMember = F3(
+	function (newMember, oldMember, memberList) {
+		return A2(
+			$elm$core$List$map,
+			function (m) {
+				return _Utils_eq(m, oldMember) ? newMember : m;
+			},
+			memberList);
+	});
+var $author$project$Main$assignItem = F3(
+	function (member, item, model) {
+		var newItem = _Utils_update(
+			item,
+			{numberAvailable: item.numberAvailable - 1});
+		return _Utils_update(
+			model,
+			{
+				bag: A3($author$project$Main$replaceBagItem, newItem, item, model.bag),
+				itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
+				party: A3(
+					$author$project$Main$replacePartyMember,
+					_Utils_update(
+						member,
+						{
+							heldItem: $elm$core$Maybe$Just(newItem)
+						}),
+					_Utils_update(
+						member,
+						{heldItem: $elm$core$Maybe$Nothing}),
+					model.party)
+			});
+	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5405,23 +5447,33 @@ var $author$project$Main$moveToNewSpace = F2(
 				playerCoordinates: A2($author$project$Main$isForbiddenSpace, model, newPlayerCoordinates) ? model.playerCoordinates : newPlayerCoordinates
 			});
 	});
-var $author$project$Main$replaceBagItem = F3(
-	function (newItem, oldItem, itemList) {
-		return A2(
-			$elm$core$List$map,
-			function (i) {
-				return _Utils_eq(i, oldItem) ? newItem : i;
-			},
-			itemList);
-	});
-var $author$project$Main$replacePartyMember = F3(
-	function (newMember, oldMember, memberList) {
-		return A2(
-			$elm$core$List$map,
-			function (m) {
-				return _Utils_eq(m, oldMember) ? newMember : m;
-			},
-			memberList);
+var $author$project$Main$returnAssignedItem = F2(
+	function (model, member) {
+		var _v0 = member.heldItem;
+		if (_v0.$ === 'Nothing') {
+			return model;
+		} else {
+			var item = _v0.a;
+			return _Utils_update(
+				model,
+				{
+					bag: A3(
+						$author$project$Main$replaceBagItem,
+						_Utils_update(
+							item,
+							{numberAvailable: item.numberAvailable + 1}),
+						item,
+						model.bag),
+					itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
+					party: A3(
+						$author$project$Main$replacePartyMember,
+						_Utils_update(
+							member,
+							{heldItem: $elm$core$Maybe$Nothing}),
+						member,
+						model.party)
+				});
+		}
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -5575,51 +5627,14 @@ var $author$project$Main$update = F2(
 			case 'PerformItemAssignment':
 				var member = msg.a;
 				var item = msg.b;
-				var newItem = _Utils_update(
+				return _Utils_eq(member.heldItem, $elm$core$Maybe$Nothing) ? A3($author$project$Main$assignItem, member, item, model) : A3(
+					$author$project$Main$assignItem,
+					member,
 					item,
-					{numberAvailable: item.numberAvailable - 1});
-				return _Utils_eq(member.heldItem, $elm$core$Maybe$Nothing) ? _Utils_update(
-					model,
-					{
-						bag: A3($author$project$Main$replaceBagItem, newItem, item, model.bag),
-						itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
-						party: A3(
-							$author$project$Main$replacePartyMember,
-							_Utils_update(
-								member,
-								{
-									heldItem: $elm$core$Maybe$Just(newItem)
-								}),
-							member,
-							model.party)
-					}) : model;
+					A2($author$project$Main$returnAssignedItem, model, member));
 			default:
 				var member = msg.a;
-				var _v1 = member.heldItem;
-				if (_v1.$ === 'Nothing') {
-					return model;
-				} else {
-					var item = _v1.a;
-					return _Utils_update(
-						model,
-						{
-							bag: A3(
-								$author$project$Main$replaceBagItem,
-								_Utils_update(
-									item,
-									{numberAvailable: item.numberAvailable + 1}),
-								item,
-								model.bag),
-							itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
-							party: A3(
-								$author$project$Main$replacePartyMember,
-								_Utils_update(
-									member,
-									{heldItem: $elm$core$Maybe$Nothing}),
-								member,
-								model.party)
-						});
-				}
+				return A2($author$project$Main$returnAssignedItem, model, member);
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
