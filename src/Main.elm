@@ -75,8 +75,12 @@ init =
   , bagViewOpen = False
   , itemAssignmentView = ItemAssignmentViewClosed
   , bag =
-    [ { name = "Life Orb", description = "Deals more damage, but takes recoil", numberAvailable = 1, numberOwned = 1 }
-    , { name = "Leftovers", description = "Heals a little bit every turn", numberAvailable = 1, numberOwned = 1 }]
+    [ { name = "Enchanted Gloves", description = "All contact moves have a random secondary effect", numberAvailable = 1, numberOwned = 1 }
+    , { name = "Protective Pendant", description = "Take 10% less damage from attacks", numberAvailable = 1, numberOwned = 1 }
+    , { name = "Holy Hand-grenade", description = "Your first attack deals explosive damage and blinds foes", numberAvailable = 1, numberOwned = 1 }
+    , { name = "Channeling Staff", description = "Your magic attacks take an extra turn to charge, but deal 3x damage", numberAvailable = 1, numberOwned = 1 }
+    , { name = "Wooden Shield", description = "Take 20% less damage, but take 2x fire damage", numberAvailable = 1, numberOwned = 1 }
+    , { name = "Hideous Hat", description = "A hat so ugly that enemies are sure to target you first", numberAvailable = 1, numberOwned = 1 }]
   , party =
     [ { class = "Mage", elementalType = "Fire", heldItem = Nothing }
     , { class = "Healer", elementalType = "Light", heldItem = Nothing }]
