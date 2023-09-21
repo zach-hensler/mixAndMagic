@@ -5309,7 +5309,9 @@ var $author$project$Main$assignItem = F3(
 						{
 							heldItem: $elm$core$Maybe$Just(newItem)
 						}),
-					member,
+					_Utils_update(
+						member,
+						{heldItem: $elm$core$Maybe$Nothing}),
 					model.party)
 			});
 	});
