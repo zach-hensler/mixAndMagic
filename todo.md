@@ -1,7 +1,8 @@
 # Features
 ## MVP Features
 ### Party Members
-- add max amount of members in reserve
+- rng member generation
+- add max amount of total members (party + reserve)
 - allow multiple members of the same class & type
   - (currently buggy w/ moving members to/from reserve)
   - could give all members a uuid to differentiate

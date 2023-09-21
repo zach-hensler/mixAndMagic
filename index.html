@@ -4465,6 +4465,8 @@ var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$Basics$False = {$: 'False'};
+var $author$project$Main$ItemAssignmentViewClosed = {$: 'ItemAssignmentViewClosed'};
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $author$project$Main$finalZone = {
 	borders: _List_fromArray(
 		[
@@ -4496,8 +4498,11 @@ var $author$project$Main$finalZone = {
 var $author$project$Main$init = {
 	bag: _List_fromArray(
 		[
-			{description: 'Deals more damage, but takes recoil', name: 'Life Orb', numberAvailable: 0, numberOwned: 1},
-			{description: 'Heals a little bit every turn', name: 'Leftovers', numberAvailable: 0, numberOwned: 1}
+			{description: 'All contact moves have a random secondary effect', name: 'Enchanted Gloves', numberAvailable: 1, numberOwned: 1},
+			{description: 'Take 10% less damage from attacks', name: 'Protective Pendant', numberAvailable: 1, numberOwned: 1},
+			{description: 'Your first attack deals explosive damage and blinds foes', name: 'Holy Hand-grenade', numberAvailable: 1, numberOwned: 1},
+			{description: 'Your magic attacks take an extra turn to charge, but deal 3x damage', name: 'Channeling Staff', numberAvailable: 1, numberOwned: 1},
+			{description: 'Take 20% less damage, but take 2x fire damage', name: 'Wooden Shield', numberAvailable: 1, numberOwned: 1}
 		]),
 	bagViewOpen: false,
 	currentZone: {
@@ -4514,16 +4519,19 @@ var $author$project$Main$init = {
 		width: 5
 	},
 	defaultZone: $author$project$Main$finalZone,
+	itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
 	menuViewOpen: false,
 	party: _List_fromArray(
 		[
-			{_class: 'Mage', elementalType: 'Fire', heldItem: 'Life Orb'},
-			{_class: 'Healer', elementalType: 'Light', heldItem: 'Leftovers'}
+			{_class: 'Mage', elementalType: 'Fire', heldItem: $elm$core$Maybe$Nothing},
+			{_class: 'Healer', elementalType: 'Light', heldItem: $elm$core$Maybe$Nothing}
 		]),
 	partyViewOpen: false,
 	playerCoordinates: _Utils_Tuple2(1, 1),
 	remainingZones: _List_fromArray(
 		[$author$project$Main$finalZone]),
+	reserveParty: _List_Nil,
+	reserveViewOpen: false,
 	shopViewOpen: false
 };
 var $elm$core$Result$Err = function (a) {
@@ -4551,7 +4559,6 @@ var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -5255,6 +5262,29 @@ var $elm$browser$Browser$sandbox = function (impl) {
 			view: impl.view
 		});
 };
+var $author$project$Main$ItemAssignmentViewOpen = function (a) {
+	return {$: 'ItemAssignmentViewOpen', a: a};
+};
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -5306,6 +5336,11 @@ var $author$project$Main$enterShop = function (model) {
 var $author$project$Main$handleMapInteractions = function (model) {
 	return _Utils_eq(model.playerCoordinates, model.currentZone.exit) ? $author$project$Main$advanceZone(model) : (_Utils_eq(model.playerCoordinates, model.currentZone.shop) ? $author$project$Main$enterShop(model) : model);
 };
+var $elm$core$Basics$not = _Basics_not;
+var $author$project$Main$isNotSamePartyMember = F2(
+	function (member1, member2) {
+		return !_Utils_eq(member1, member2);
+	});
 var $elm$core$Tuple$mapFirst = F2(
 	function (func, _v0) {
 		var x = _v0.a;
@@ -5322,6 +5357,7 @@ var $elm$core$Tuple$mapSecond = F2(
 			x,
 			func(y));
 	});
+var $author$project$Main$maxPartySize = 3;
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -5368,6 +5404,24 @@ var $author$project$Main$moveToNewSpace = F2(
 			{
 				playerCoordinates: A2($author$project$Main$isForbiddenSpace, model, newPlayerCoordinates) ? model.playerCoordinates : newPlayerCoordinates
 			});
+	});
+var $author$project$Main$replaceBagItem = F3(
+	function (newItem, oldItem, itemList) {
+		return A2(
+			$elm$core$List$map,
+			function (i) {
+				return _Utils_eq(i, oldItem) ? newItem : i;
+			},
+			itemList);
+	});
+var $author$project$Main$replacePartyMember = F3(
+	function (newMember, oldMember, memberList) {
+		return A2(
+			$elm$core$List$map,
+			function (m) {
+				return _Utils_eq(m, oldMember) ? newMember : m;
+			},
+			memberList);
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -5429,7 +5483,7 @@ var $author$project$Main$update = F2(
 			case 'CloseMenu':
 				return _Utils_update(
 					model,
-					{bagViewOpen: false, menuViewOpen: false, partyViewOpen: false});
+					{bagViewOpen: false, menuViewOpen: false, partyViewOpen: false, reserveViewOpen: false});
 			case 'OpenParty':
 				return _Utils_update(
 					model,
@@ -5438,24 +5492,187 @@ var $author$project$Main$update = F2(
 				return _Utils_update(
 					model,
 					{partyViewOpen: false});
+			case 'OpenReserve':
+				return _Utils_update(
+					model,
+					{reserveViewOpen: true});
+			case 'CloseReserve':
+				return _Utils_update(
+					model,
+					{reserveViewOpen: false});
 			case 'OpenBag':
 				return _Utils_update(
 					model,
 					{bagViewOpen: true});
-			default:
+			case 'CloseBag':
 				return _Utils_update(
 					model,
 					{bagViewOpen: false});
+			case 'MovePartyMemberToReserve':
+				var member = msg.a;
+				return _Utils_update(
+					model,
+					{
+						party: A2(
+							$elm$core$List$filter,
+							$author$project$Main$isNotSamePartyMember(member),
+							model.party),
+						reserveParty: A2(
+							$elm$core$List$append,
+							model.reserveParty,
+							_List_fromArray(
+								[member]))
+					});
+			case 'MoveReserveMemberToParty':
+				var member = msg.a;
+				return (_Utils_cmp(
+					$elm$core$List$length(model.party),
+					$author$project$Main$maxPartySize) < 0) ? _Utils_update(
+					model,
+					{
+						party: A2(
+							$elm$core$List$append,
+							model.party,
+							_List_fromArray(
+								[member])),
+						reserveParty: A2(
+							$elm$core$List$filter,
+							$author$project$Main$isNotSamePartyMember(member),
+							model.reserveParty)
+					}) : model;
+			case 'AddNewMember':
+				var member = msg.a;
+				return (_Utils_cmp(
+					$elm$core$List$length(model.party),
+					$author$project$Main$maxPartySize) > -1) ? _Utils_update(
+					model,
+					{
+						reserveParty: A2(
+							$elm$core$List$append,
+							model.reserveParty,
+							_List_fromArray(
+								[member]))
+					}) : _Utils_update(
+					model,
+					{
+						party: A2(
+							$elm$core$List$append,
+							model.party,
+							_List_fromArray(
+								[member]))
+					});
+			case 'OpenItemAssigment':
+				var item = msg.a;
+				return _Utils_update(
+					model,
+					{
+						itemAssignmentView: (item.numberAvailable > 0) ? $author$project$Main$ItemAssignmentViewOpen(item) : $author$project$Main$ItemAssignmentViewClosed
+					});
+			case 'CloseItemAssignment':
+				return _Utils_update(
+					model,
+					{itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed});
+			case 'PerformItemAssignment':
+				var member = msg.a;
+				var item = msg.b;
+				var newItem = _Utils_update(
+					item,
+					{numberAvailable: item.numberAvailable - 1});
+				return _Utils_eq(member.heldItem, $elm$core$Maybe$Nothing) ? _Utils_update(
+					model,
+					{
+						bag: A3($author$project$Main$replaceBagItem, newItem, item, model.bag),
+						itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
+						party: A3(
+							$author$project$Main$replacePartyMember,
+							_Utils_update(
+								member,
+								{
+									heldItem: $elm$core$Maybe$Just(newItem)
+								}),
+							member,
+							model.party)
+					}) : model;
+			default:
+				var member = msg.a;
+				var _v1 = member.heldItem;
+				if (_v1.$ === 'Nothing') {
+					return model;
+				} else {
+					var item = _v1.a;
+					return _Utils_update(
+						model,
+						{
+							bag: A3(
+								$author$project$Main$replaceBagItem,
+								_Utils_update(
+									item,
+									{numberAvailable: item.numberAvailable + 1}),
+								item,
+								model.bag),
+							itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
+							party: A3(
+								$author$project$Main$replacePartyMember,
+								_Utils_update(
+									member,
+									{heldItem: $elm$core$Maybe$Nothing}),
+								member,
+								model.party)
+						});
+				}
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Main$CloseBag = {$: 'CloseBag'};
+var $author$project$Main$AddNewMember = function (a) {
+	return {$: 'AddNewMember', a: a};
+};
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$drawAddNewMemberButton = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						$author$project$Main$AddNewMember(
+							{_class: 'Mage', elementalType: 'Dark', heldItem: $elm$core$Maybe$Nothing}))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Add new member')
+					]))
+			]));
+};
+var $author$project$Main$CloseBag = {$: 'CloseBag'};
+var $author$project$Main$OpenItemAssigment = function (a) {
+	return {$: 'OpenItemAssigment', a: a};
+};
 var $elm$html$Html$hr = _VirtualDom_node('hr');
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$drawBagItem = function (bagItem) {
 	return A2(
 		$elm$html$Html$div,
@@ -5512,25 +5729,24 @@ var $author$project$Main$drawBagItem = function (bagItem) {
 								$elm$html$Html$text(
 								$elm$core$String$fromInt(bagItem.numberAvailable) + ('/' + $elm$core$String$fromInt(bagItem.numberOwned)))
 							]))
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'width', '100%'),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'display',
+						(bagItem.numberAvailable > 0) ? 'block' : 'none'),
+						$elm$html$Html$Events$onClick(
+						$author$project$Main$OpenItemAssigment(bagItem))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Assign')
 					]))
 			]));
-};
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
 };
 var $author$project$Main$drawBag = function (model) {
 	return A2(
@@ -5578,10 +5794,88 @@ var $author$project$Main$drawBag = function (model) {
 					]))
 			]));
 };
+var $author$project$Main$CloseItemAssignment = {$: 'CloseItemAssignment'};
+var $author$project$Main$PerformItemAssignment = F2(
+	function (a, b) {
+		return {$: 'PerformItemAssignment', a: a, b: b};
+	});
+var $author$project$Main$drawItemAssignmentPartyMember = F2(
+	function (item, partyMember) {
+		return A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onClick(
+					A2($author$project$Main$PerformItemAssignment, partyMember, item))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(
+					_Utils_ap(partyMember.elementalType, partyMember._class))
+				]));
+	});
+var $author$project$Main$drawItemAssignment = function (model) {
+	var _v0 = model.itemAssignmentView;
+	if (_v0.$ === 'ItemAssignmentViewClosed') {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'none')
+				]),
+			_List_Nil);
+	} else {
+		var item = _v0.a;
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
+					A2($elm$html$Html$Attributes$style, 'margin', '5px'),
+					A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Assign ' + (item.name + ' to:'))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+							A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
+						]),
+					A2(
+						$elm$core$List$map,
+						$author$project$Main$drawItemAssignmentPartyMember(item),
+						model.party)),
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Events$onClick($author$project$Main$CloseItemAssignment),
+							A2($elm$html$Html$Attributes$style, 'margin', '5px 10px')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Close')
+						]))
+				]));
+	}
+};
 var $author$project$Main$CloseMenu = {$: 'CloseMenu'};
 var $author$project$Main$OpenBag = {$: 'OpenBag'};
 var $author$project$Main$OpenMenu = {$: 'OpenMenu'};
 var $author$project$Main$OpenParty = {$: 'OpenParty'};
+var $author$project$Main$OpenReserve = {$: 'OpenReserve'};
 var $author$project$Main$drawMenu = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -5667,6 +5961,25 @@ var $author$project$Main$drawMenu = function (model) {
 								$elm$html$Html$button,
 								_List_fromArray(
 									[
+										$elm$html$Html$Events$onClick($author$project$Main$OpenReserve)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Reserve')
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
 										$elm$html$Html$Events$onClick($author$project$Main$OpenBag)
 									]),
 								_List_fromArray(
@@ -5697,7 +6010,33 @@ var $author$project$Main$drawMenu = function (model) {
 			]));
 };
 var $author$project$Main$CloseParty = {$: 'CloseParty'};
-var $author$project$Main$drawPartyItem = function (partyMember) {
+var $author$project$Main$MovePartyMemberToReserve = function (a) {
+	return {$: 'MovePartyMemberToReserve', a: a};
+};
+var $author$project$Main$ReturnAssignedItem = function (a) {
+	return {$: 'ReturnAssignedItem', a: a};
+};
+var $author$project$Main$drawPartyMemberHeldItem = function (bagItem) {
+	if (bagItem.$ === 'Nothing') {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'none')
+				]),
+			_List_Nil);
+	} else {
+		var item = bagItem.a;
+		return A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('holding: ' + item.name)
+				]));
+	}
+};
+var $author$project$Main$drawPartyMember = function (partyMember) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -5724,6 +6063,7 @@ var $author$project$Main$drawPartyItem = function (partyMember) {
 					[
 						$elm$html$Html$text(partyMember.elementalType + (' ' + partyMember._class))
 					])),
+				$author$project$Main$drawPartyMemberHeldItem(partyMember.heldItem),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
@@ -5731,11 +6071,38 @@ var $author$project$Main$drawPartyItem = function (partyMember) {
 						A2(
 						$elm$html$Html$Attributes$style,
 						'display',
-						$elm$core$String$isEmpty(partyMember.heldItem) ? 'none' : 'block')
+						_Utils_eq(partyMember.heldItem, $elm$core$Maybe$Nothing) ? 'none' : 'block')
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('holding: ' + partyMember.heldItem)
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$ReturnAssignedItem(partyMember))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Return Item')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$MovePartyMemberToReserve(partyMember))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Move to Reserve')
+							]))
 					]))
 			]));
 };
@@ -5771,12 +6138,129 @@ var $author$project$Main$drawParty = function (model) {
 						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
 						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
 					]),
-				A2($elm$core$List$map, $author$project$Main$drawPartyItem, model.party)),
+				A2($elm$core$List$map, $author$project$Main$drawPartyMember, model.party)),
 				A2(
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
 						$elm$html$Html$Events$onClick($author$project$Main$CloseParty),
+						A2($elm$html$Html$Attributes$style, 'margin', '5px 10px')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Close')
+					]))
+			]));
+};
+var $author$project$Main$CloseReserve = {$: 'CloseReserve'};
+var $author$project$Main$MoveReserveMemberToParty = function (a) {
+	return {$: 'MoveReserveMemberToParty', a: a};
+};
+var $author$project$Main$drawReserveMemberHeldItem = function (bagItem) {
+	if (bagItem.$ === 'Nothing') {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'none')
+				]),
+			_List_Nil);
+	} else {
+		var item = bagItem.a;
+		return A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('holding: ' + item.name)
+				]));
+	}
+};
+var $author$project$Main$drawReserveMember = function (reserveMember) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$hr,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'width', '85%'),
+						A2($elm$html$Html$Attributes$style, 'color', 'lightgray')
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(reserveMember.elementalType + (' ' + reserveMember._class))
+					])),
+				$author$project$Main$drawReserveMemberHeldItem(reserveMember.heldItem),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$MoveReserveMemberToParty(reserveMember))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Move to Party')
+							]))
+					]))
+			]));
+};
+var $author$project$Main$drawReserve = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
+				A2($elm$html$Html$Attributes$style, 'margin', '5px'),
+				A2(
+				$elm$html$Html$Attributes$style,
+				'display',
+				model.reserveViewOpen ? 'flex' : 'none'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Reserve')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
+					]),
+				A2($elm$core$List$map, $author$project$Main$drawReserveMember, model.reserveParty)),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Main$CloseReserve),
 						A2($elm$html$Html$Attributes$style, 'margin', '5px 10px')
 					]),
 				_List_fromArray(
@@ -5939,7 +6423,10 @@ var $author$project$Main$view = function (model) {
 				$author$project$Main$drawZoneAndControls(model),
 				$author$project$Main$drawMenu(model),
 				$author$project$Main$drawBag(model),
-				$author$project$Main$drawParty(model)
+				$author$project$Main$drawItemAssignment(model),
+				$author$project$Main$drawParty(model),
+				$author$project$Main$drawReserve(model),
+				$author$project$Main$drawAddNewMemberButton(model)
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
