@@ -1,4 +1,4 @@
-# Design Ideas for Mix and Magic (working title)
+# Game Mechanics
 
 ## Core Principles:
 - RPG 3v3 turn based battles
@@ -39,11 +39,21 @@
 - blue elixir - increases attack for this zone
 - green elixir - increases defense for this zone
 
-## Statuses
-- curse - deals damage over time, stacks
-- blessed - takes less damage and/or heals every turn
-
 ## Characters
+- A character has:
+  - A class
+    - Randomly generated
+  - A species
+    - Randomly generated
+  - Stats
+    - Base stats + class modifiers + species modifiers + ability modifiers (if applicable)
+  - Moves
+    - species specific moves
+    - class specific moves
+    - species + class specific moves
+  - Abilities?
+    - Could come from species or class (undecided)
+    - Randomly generated from a pre-determined list of options
 
 ### Stats:
 - health
@@ -56,32 +66,38 @@
   - Determines how much damage that character can deal
 
 ### Character Classes:
-- healer:
+- Healer
+  - stat changes: -attack +speed
   - support
   - self-healing
   - healing teammates
   - de-buffs
-  - medium bulk
-  - low attack power
-- tank:
-  - high bulk
-  - medium attack power
+- Tank:
+  - stat changes: +hp +defense --speed
   - crowd control
   - some support
-- fighter:
-  - high attack power
-  - medium bulk
+- Fighter:
+  - stat changes: +attack +hp -defense
   - reckless
   - straightforward
-- mage:
-  - low bulk
-  - high attack power
+- Mage:
+  - stat changes: +attack -hp -defense +speed
   - strategic
   - devious
   - additional effects on attacks
 
 ### Character Species:
 - human
+  - stat changes: none
 - elf
+  - stat changes: -hp, +attack, +speed
 - cat
+  - stat changes: -hp, -defense, ++speed
 - wolf
+  - stat changes: +speed, +defense, --hp, +attack
+- giant
+  - stat changes: --speed, ++hp, ++defense
+
+## Statuses
+- curse - deals damage over time, stacks
+- blessed - takes less damage and/or heals every turn
