@@ -4464,8 +4464,7 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
-var $elm$core$Basics$False = {$: 'False'};
-var $author$project$Main$ItemAssignmentViewClosed = {$: 'ItemAssignmentViewClosed'};
+var $author$project$Main$Map = {$: 'Map'};
 var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $author$project$Main$finalZone = {
 	borders: _List_fromArray(
@@ -4496,6 +4495,7 @@ var $author$project$Main$finalZone = {
 	width: 4
 };
 var $author$project$Main$init = {
+	activeView: $author$project$Main$Map,
 	bag: _List_fromArray(
 		[
 			{description: 'All contact moves have a random secondary effect', name: 'Enchanted Gloves', numberAvailable: 1, numberOwned: 1},
@@ -4505,7 +4505,6 @@ var $author$project$Main$init = {
 			{description: 'Take 20% less damage, but take 2x fire damage', name: 'Wooden Shield', numberAvailable: 1, numberOwned: 1},
 			{description: 'A hat so ugly that enemies are sure to target you first', name: 'Hideous Hat', numberAvailable: 1, numberOwned: 1}
 		]),
-	bagViewOpen: false,
 	currentZone: {
 		borders: _List_fromArray(
 			[
@@ -4520,20 +4519,15 @@ var $author$project$Main$init = {
 		width: 5
 	},
 	defaultZone: $author$project$Main$finalZone,
-	itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
-	menuViewOpen: false,
 	party: _List_fromArray(
 		[
 			{_class: 'Mage', elementalType: 'Fire', heldItem: $elm$core$Maybe$Nothing},
 			{_class: 'Healer', elementalType: 'Light', heldItem: $elm$core$Maybe$Nothing}
 		]),
-	partyViewOpen: false,
 	playerCoordinates: _Utils_Tuple2(1, 1),
 	remainingZones: _List_fromArray(
 		[$author$project$Main$finalZone]),
-	reserveParty: _List_Nil,
-	reserveViewOpen: false,
-	shopViewOpen: false
+	reserve: _List_Nil
 };
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -4556,6 +4550,7 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
+var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
@@ -5263,9 +5258,13 @@ var $elm$browser$Browser$sandbox = function (impl) {
 			view: impl.view
 		});
 };
+var $author$project$Main$Bag = {$: 'Bag'};
 var $author$project$Main$ItemAssignmentViewOpen = function (a) {
 	return {$: 'ItemAssignmentViewOpen', a: a};
 };
+var $author$project$Main$MainMenu = {$: 'MainMenu'};
+var $author$project$Main$Party = {$: 'Party'};
+var $author$project$Main$Reserve = {$: 'Reserve'};
 var $elm$core$List$append = F2(
 	function (xs, ys) {
 		if (!ys.b) {
@@ -5293,24 +5292,24 @@ var $author$project$Main$replacePartyMember = F3(
 			memberList);
 	});
 var $author$project$Main$assignItem = F3(
-	function (member, item, model) {
+	function (character, item, model) {
 		var newItem = _Utils_update(
 			item,
 			{numberAvailable: item.numberAvailable - 1});
 		return _Utils_update(
 			model,
 			{
+				activeView: $author$project$Main$Bag,
 				bag: A3($author$project$Main$replaceBagItem, newItem, item, model.bag),
-				itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
 				party: A3(
 					$author$project$Main$replacePartyMember,
 					_Utils_update(
-						member,
+						character,
 						{
 							heldItem: $elm$core$Maybe$Just(newItem)
 						}),
 					_Utils_update(
-						member,
+						character,
 						{heldItem: $elm$core$Maybe$Nothing}),
 					model.party)
 			});
@@ -5370,18 +5369,19 @@ var $author$project$Main$advanceZone = function (model) {
 				$elm$core$List$tail(model.remainingZones))
 		});
 };
+var $author$project$Main$Shop = {$: 'Shop'};
 var $author$project$Main$enterShop = function (model) {
 	return _Utils_update(
 		model,
-		{shopViewOpen: true});
+		{activeView: $author$project$Main$Shop});
 };
 var $author$project$Main$handleMapInteractions = function (model) {
 	return _Utils_eq(model.playerCoordinates, model.currentZone.exit) ? $author$project$Main$advanceZone(model) : (_Utils_eq(model.playerCoordinates, model.currentZone.shop) ? $author$project$Main$enterShop(model) : model);
 };
 var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$isNotSamePartyMember = F2(
-	function (member1, member2) {
-		return !_Utils_eq(member1, member2);
+	function (character1, character2) {
+		return !_Utils_eq(character1, character2);
 	});
 var $elm$core$Tuple$mapFirst = F2(
 	function (func, _v0) {
@@ -5448,8 +5448,8 @@ var $author$project$Main$moveToNewSpace = F2(
 			});
 	});
 var $author$project$Main$returnAssignedItem = F2(
-	function (model, member) {
-		var _v0 = member.heldItem;
+	function (model, character) {
+		var _v0 = character.heldItem;
 		if (_v0.$ === 'Nothing') {
 			return model;
 		} else {
@@ -5457,6 +5457,7 @@ var $author$project$Main$returnAssignedItem = F2(
 			return _Utils_update(
 				model,
 				{
+					activeView: $author$project$Main$Bag,
 					bag: A3(
 						$author$project$Main$replaceBagItem,
 						_Utils_update(
@@ -5464,13 +5465,12 @@ var $author$project$Main$returnAssignedItem = F2(
 							{numberAvailable: item.numberAvailable + 1}),
 						item,
 						model.bag),
-					itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed,
 					party: A3(
 						$author$project$Main$replacePartyMember,
 						_Utils_update(
-							member,
+							character,
 							{heldItem: $elm$core$Maybe$Nothing}),
-						member,
+						character,
 						model.party)
 				});
 		}
@@ -5527,56 +5527,56 @@ var $author$project$Main$update = F2(
 			case 'LeaveShop':
 				return _Utils_update(
 					model,
-					{shopViewOpen: false});
+					{activeView: $author$project$Main$Map});
 			case 'OpenMenu':
 				return _Utils_update(
 					model,
-					{menuViewOpen: true});
+					{activeView: $author$project$Main$MainMenu});
 			case 'CloseMenu':
 				return _Utils_update(
 					model,
-					{bagViewOpen: false, menuViewOpen: false, partyViewOpen: false, reserveViewOpen: false});
+					{activeView: $author$project$Main$Map});
 			case 'OpenParty':
 				return _Utils_update(
 					model,
-					{partyViewOpen: true});
+					{activeView: $author$project$Main$Party});
 			case 'CloseParty':
 				return _Utils_update(
 					model,
-					{partyViewOpen: false});
+					{activeView: $author$project$Main$MainMenu});
 			case 'OpenReserve':
 				return _Utils_update(
 					model,
-					{reserveViewOpen: true});
+					{activeView: $author$project$Main$Reserve});
 			case 'CloseReserve':
 				return _Utils_update(
 					model,
-					{reserveViewOpen: false});
+					{activeView: $author$project$Main$MainMenu});
 			case 'OpenBag':
 				return _Utils_update(
 					model,
-					{bagViewOpen: true});
+					{activeView: $author$project$Main$Bag});
 			case 'CloseBag':
 				return _Utils_update(
 					model,
-					{bagViewOpen: false});
+					{activeView: $author$project$Main$MainMenu});
 			case 'MovePartyMemberToReserve':
-				var member = msg.a;
+				var character = msg.a;
 				return _Utils_update(
 					model,
 					{
 						party: A2(
 							$elm$core$List$filter,
-							$author$project$Main$isNotSamePartyMember(member),
+							$author$project$Main$isNotSamePartyMember(character),
 							model.party),
-						reserveParty: A2(
+						reserve: A2(
 							$elm$core$List$append,
-							model.reserveParty,
+							model.reserve,
 							_List_fromArray(
-								[member]))
+								[character]))
 					});
 			case 'MoveReserveMemberToParty':
-				var member = msg.a;
+				var character = msg.a;
 				return (_Utils_cmp(
 					$elm$core$List$length(model.party),
 					$author$project$Main$maxPartySize) < 0) ? _Utils_update(
@@ -5586,24 +5586,24 @@ var $author$project$Main$update = F2(
 							$elm$core$List$append,
 							model.party,
 							_List_fromArray(
-								[member])),
-						reserveParty: A2(
+								[character])),
+						reserve: A2(
 							$elm$core$List$filter,
-							$author$project$Main$isNotSamePartyMember(member),
-							model.reserveParty)
+							$author$project$Main$isNotSamePartyMember(character),
+							model.reserve)
 					}) : model;
-			case 'AddNewMember':
-				var member = msg.a;
+			case 'AddNewPartyMember':
+				var character = msg.a;
 				return (_Utils_cmp(
 					$elm$core$List$length(model.party),
 					$author$project$Main$maxPartySize) > -1) ? _Utils_update(
 					model,
 					{
-						reserveParty: A2(
+						reserve: A2(
 							$elm$core$List$append,
-							model.reserveParty,
+							model.reserve,
 							_List_fromArray(
-								[member]))
+								[character]))
 					}) : _Utils_update(
 					model,
 					{
@@ -5611,35 +5611,35 @@ var $author$project$Main$update = F2(
 							$elm$core$List$append,
 							model.party,
 							_List_fromArray(
-								[member]))
+								[character]))
 					});
 			case 'OpenItemAssigment':
 				var item = msg.a;
 				return _Utils_update(
 					model,
 					{
-						itemAssignmentView: (item.numberAvailable > 0) ? $author$project$Main$ItemAssignmentViewOpen(item) : $author$project$Main$ItemAssignmentViewClosed
+						activeView: (item.numberAvailable > 0) ? $author$project$Main$ItemAssignmentViewOpen(item) : $author$project$Main$Bag
 					});
 			case 'CloseItemAssignment':
 				return _Utils_update(
 					model,
-					{itemAssignmentView: $author$project$Main$ItemAssignmentViewClosed});
+					{activeView: $author$project$Main$Bag});
 			case 'PerformItemAssignment':
-				var member = msg.a;
+				var character = msg.a;
 				var item = msg.b;
-				return _Utils_eq(member.heldItem, $elm$core$Maybe$Nothing) ? A3($author$project$Main$assignItem, member, item, model) : A3(
+				return _Utils_eq(character.heldItem, $elm$core$Maybe$Nothing) ? A3($author$project$Main$assignItem, character, item, model) : A3(
 					$author$project$Main$assignItem,
-					member,
+					character,
 					item,
-					A2($author$project$Main$returnAssignedItem, model, member));
+					A2($author$project$Main$returnAssignedItem, model, character));
 			default:
 				var member = msg.a;
 				return A2($author$project$Main$returnAssignedItem, model, member);
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Main$AddNewMember = function (a) {
-	return {$: 'AddNewMember', a: a};
+var $author$project$Main$AddNewPartyMember = function (a) {
+	return {$: 'AddNewPartyMember', a: a};
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -5672,7 +5672,7 @@ var $author$project$Main$drawAddNewMemberButton = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Events$onClick(
-						$author$project$Main$AddNewMember(
+						$author$project$Main$AddNewPartyMember(
 							{_class: 'Mage', elementalType: 'Dark', heldItem: $elm$core$Maybe$Nothing}))
 					]),
 				_List_fromArray(
@@ -5773,7 +5773,7 @@ var $author$project$Main$drawBag = function (model) {
 				A2(
 				$elm$html$Html$Attributes$style,
 				'display',
-				model.bagViewOpen ? 'flex' : 'none'),
+				_Utils_eq(model.activeView, $author$project$Main$Bag) ? 'flex' : 'none'),
 				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
 			]),
 		_List_fromArray(
@@ -5830,16 +5830,8 @@ var $author$project$Main$drawItemAssignmentPartyMember = F2(
 				]));
 	});
 var $author$project$Main$drawItemAssignment = function (model) {
-	var _v0 = model.itemAssignmentView;
-	if (_v0.$ === 'ItemAssignmentViewClosed') {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'display', 'none')
-				]),
-			_List_Nil);
-	} else {
+	var _v0 = model.activeView;
+	if (_v0.$ === 'ItemAssignmentViewOpen') {
 		var item = _v0.a;
 		return A2(
 			$elm$html$Html$div,
@@ -5884,6 +5876,14 @@ var $author$project$Main$drawItemAssignment = function (model) {
 							$elm$html$Html$text('Close')
 						]))
 				]));
+	} else {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'none')
+				]),
+			_List_Nil);
 	}
 };
 var $author$project$Main$CloseMenu = {$: 'CloseMenu'};
@@ -5906,7 +5906,7 @@ var $author$project$Main$drawMenu = function (model) {
 						A2(
 						$elm$html$Html$Attributes$style,
 						'display',
-						model.menuViewOpen ? 'none' : 'block')
+						_Utils_eq(model.activeView, $author$project$Main$MainMenu) ? 'none' : 'block')
 					]),
 				_List_fromArray(
 					[
@@ -5921,7 +5921,7 @@ var $author$project$Main$drawMenu = function (model) {
 						A2(
 						$elm$html$Html$Attributes$style,
 						'display',
-						model.menuViewOpen ? 'flex' : 'none'),
+						_Utils_eq(model.activeView, $author$project$Main$MainMenu) ? 'flex' : 'none'),
 						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
 						A2($elm$html$Html$Attributes$style, 'align-items', 'center')
 					]),
@@ -6131,7 +6131,7 @@ var $author$project$Main$drawParty = function (model) {
 				A2(
 				$elm$html$Html$Attributes$style,
 				'display',
-				model.partyViewOpen ? 'flex' : 'none'),
+				_Utils_eq(model.activeView, $author$project$Main$Party) ? 'flex' : 'none'),
 				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
 			]),
 		_List_fromArray(
@@ -6248,7 +6248,7 @@ var $author$project$Main$drawReserve = function (model) {
 				A2(
 				$elm$html$Html$Attributes$style,
 				'display',
-				model.reserveViewOpen ? 'flex' : 'none'),
+				_Utils_eq(model.activeView, $author$project$Main$Reserve) ? 'flex' : 'none'),
 				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
 			]),
 		_List_fromArray(
@@ -6270,7 +6270,7 @@ var $author$project$Main$drawReserve = function (model) {
 						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
 						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
 					]),
-				A2($elm$core$List$map, $author$project$Main$drawReserveMember, model.reserveParty)),
+				A2($elm$core$List$map, $author$project$Main$drawReserveMember, model.reserve)),
 				A2(
 				$elm$html$Html$button,
 				_List_fromArray(
@@ -6402,7 +6402,7 @@ var $author$project$Main$drawZoneAndControls = function (model) {
 						A2(
 						$elm$html$Html$Attributes$style,
 						'display',
-						model.shopViewOpen ? 'block' : 'none')
+						_Utils_eq(model.activeView, $author$project$Main$Shop) ? 'block' : 'none')
 					]),
 				_List_fromArray(
 					[

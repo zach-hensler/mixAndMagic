@@ -29,9 +29,10 @@ maxPartySize = 3
 ----------------------------
 
 type alias Coordinates = (Int, Int)
-type alias BagItem = { name: String, description: String, numberAvailable: Int, numberOwned: Int }
-type alias PartyMember = { class: String, elementalType: String, heldItem: Maybe BagItem }
-type ItemAssignmentView = ItemAssignmentViewClosed | ItemAssignmentViewOpen BagItem
+type alias HeldItem = { name: String, description: String, numberAvailable: Int, numberOwned: Int }
+type alias Character = { class: String, elementalType: String, heldItem: Maybe HeldItem }
+
+type ActiveView = Map | MainMenu | Bag | Party | Reserve | ItemAssignmentViewOpen HeldItem | Shop
 
 type alias Zone =
   { borders: List Coordinates
@@ -46,15 +47,10 @@ type alias Model =
   , currentZone: Zone
   , remainingZones: List Zone
   , defaultZone: Zone
-  , shopViewOpen: Bool
-  , menuViewOpen: Bool
-  , partyViewOpen: Bool
-  , reserveViewOpen: Bool
-  , bagViewOpen: Bool
-  , itemAssignmentView: ItemAssignmentView
-  , bag: List BagItem
-  , party: List PartyMember
-  , reserveParty: List PartyMember}
+  , activeView: ActiveView
+  , bag: List HeldItem
+  , party: List Character
+  , reserve: List Character}
 
 init : Model
 init =
@@ -68,12 +64,7 @@ init =
     , height = 5 }
   , remainingZones = [finalZone]
   , defaultZone = finalZone
-  , shopViewOpen = False
-  , menuViewOpen = False
-  , partyViewOpen = False
-  , reserveViewOpen = False
-  , bagViewOpen = False
-  , itemAssignmentView = ItemAssignmentViewClosed
+  , activeView = Map
   , bag =
     [ { name = "Enchanted Gloves", description = "All contact moves have a random secondary effect", numberAvailable = 1, numberOwned = 1 }
     , { name = "Protective Pendant", description = "Take 10% less damage from attacks", numberAvailable = 1, numberOwned = 1 }
@@ -84,7 +75,7 @@ init =
   , party =
     [ { class = "Mage", elementalType = "Fire", heldItem = Nothing }
     , { class = "Healer", elementalType = "Light", heldItem = Nothing }]
-  , reserveParty = []}
+  , reserve = []}
 
 finalZone: Zone
 finalZone =
@@ -120,13 +111,13 @@ type Msg
   | CloseReserve
   | OpenBag
   | CloseBag
-  | MovePartyMemberToReserve PartyMember
-  | MoveReserveMemberToParty PartyMember
-  | AddNewMember PartyMember
-  | OpenItemAssigment BagItem
+  | MovePartyMemberToReserve Character
+  | MoveReserveMemberToParty Character
+  | AddNewPartyMember Character
+  | OpenItemAssigment HeldItem
   | CloseItemAssignment
-  | PerformItemAssignment PartyMember BagItem
-  | ReturnAssignedItem PartyMember
+  | PerformItemAssignment Character HeldItem
+  | ReturnAssignedItem Character
 
 
 update: Msg -> Model -> Model
@@ -141,66 +132,65 @@ update msg model =
       moveToNewSpace (Tuple.mapSecond (\int -> int - 1) model.playerCoordinates) model |> handleMapInteractions
     MovePlayerDown ->
       moveToNewSpace (Tuple.mapSecond (\int -> int + 1) model.playerCoordinates) model |> handleMapInteractions
-    LeaveShop -> { model | shopViewOpen = False }
-    OpenMenu -> { model | menuViewOpen = True }
-    CloseMenu -> { model | menuViewOpen = False, bagViewOpen = False, partyViewOpen = False, reserveViewOpen = False }
-    OpenParty -> { model | partyViewOpen = True }
-    CloseParty -> { model | partyViewOpen = False }
-    OpenReserve -> { model | reserveViewOpen = True }
-    CloseReserve -> { model | reserveViewOpen = False }
-    OpenBag -> { model | bagViewOpen = True }
-    CloseBag -> { model | bagViewOpen = False }
-    MovePartyMemberToReserve member ->
+    LeaveShop -> { model | activeView = Map }
+    OpenMenu -> { model | activeView = MainMenu }
+    CloseMenu -> { model | activeView = Map }
+    OpenParty -> { model | activeView = Party }
+    CloseParty -> { model | activeView = MainMenu }
+    OpenReserve -> { model | activeView = Reserve }
+    CloseReserve -> { model | activeView = MainMenu }
+    OpenBag -> { model | activeView = Bag }
+    CloseBag -> { model | activeView = MainMenu }
+    MovePartyMemberToReserve character ->
       { model
-      | party = List.filter (isNotSamePartyMember member) model.party
-      , reserveParty = List.append model.reserveParty [member]}
-    MoveReserveMemberToParty member ->
+      | party = List.filter (isNotSamePartyMember character) model.party
+      , reserve = List.append model.reserve [character]}
+    MoveReserveMemberToParty character ->
       if List.length model.party < maxPartySize
       then { model
-      | reserveParty = List.filter (isNotSamePartyMember member) model.reserveParty
-      , party = List.append model.party [member]}
+      | reserve = List.filter (isNotSamePartyMember character) model.reserve
+      , party = List.append model.party [character]}
       else model
-    AddNewMember member ->
+    AddNewPartyMember character ->
       if List.length model.party >= maxPartySize
-      then { model | reserveParty = List.append model.reserveParty [member] }
-      else { model | party = List.append model.party [member] }
+      then { model | reserve = List.append model.reserve [character] }
+      else { model | party = List.append model.party [character] }
     OpenItemAssigment item ->
-      { model
-      | itemAssignmentView = if item.numberAvailable > 0 then (ItemAssignmentViewOpen item) else ItemAssignmentViewClosed }
-    CloseItemAssignment -> { model | itemAssignmentView = ItemAssignmentViewClosed }
-    PerformItemAssignment member item ->
-      if (member.heldItem == Nothing)
-      then assignItem member item model
-      else (returnAssignedItem model member) |> (assignItem member item)
+      { model | activeView = if item.numberAvailable > 0 then (ItemAssignmentViewOpen item) else Bag }
+    CloseItemAssignment -> { model | activeView = Bag }
+    PerformItemAssignment character item ->
+      if (character.heldItem == Nothing)
+      then assignItem character item model
+      else (returnAssignedItem model character) |> (assignItem character item)
     ReturnAssignedItem member -> returnAssignedItem model member
 
-assignItem: PartyMember -> BagItem -> Model -> Model
-assignItem member item model =
+assignItem: Character -> HeldItem -> Model -> Model
+assignItem character item model =
   let newItem = { item | numberAvailable = item.numberAvailable - 1 } in
   { model
-  | party = replacePartyMember { member | heldItem = Just newItem } { member | heldItem = Nothing } model.party
+  | party = replacePartyMember { character | heldItem = Just newItem } { character | heldItem = Nothing } model.party
   , bag = replaceBagItem newItem item model.bag
-  , itemAssignmentView = ItemAssignmentViewClosed}
+  , activeView = Bag}
 
-returnAssignedItem: Model -> PartyMember -> Model
-returnAssignedItem model member =
-  case member.heldItem of
+returnAssignedItem: Model -> Character -> Model
+returnAssignedItem model character =
+  case character.heldItem of
     Nothing -> model
     Just item -> { model
-            | party = replacePartyMember { member | heldItem = Nothing } member model.party
+            | party = replacePartyMember { character | heldItem = Nothing } character model.party
             , bag = replaceBagItem { item | numberAvailable = item.numberAvailable + 1 } item model.bag
-            , itemAssignmentView = ItemAssignmentViewClosed}
+            , activeView = Bag}
 
-replaceBagItem: BagItem -> BagItem -> List BagItem -> List BagItem
+replaceBagItem: HeldItem -> HeldItem -> List HeldItem -> List HeldItem
 replaceBagItem newItem oldItem itemList =
   List.map (\i -> if i == oldItem then newItem else i) itemList
 
-replacePartyMember: PartyMember -> PartyMember -> List PartyMember -> List PartyMember
+replacePartyMember: Character -> Character -> List Character -> List Character
 replacePartyMember newMember oldMember memberList =
   List.map (\m -> if m == oldMember then newMember else m) memberList
 
-isNotSamePartyMember: PartyMember -> PartyMember -> Bool
-isNotSamePartyMember member1 member2 = not (member1 == member2)
+isNotSamePartyMember: Character -> Character -> Bool
+isNotSamePartyMember character1 character2 = not (character1 == character2)
 
 moveToNewSpace: (Int, Int) -> Model -> Model
 moveToNewSpace newPlayerCoordinates model = { model | playerCoordinates =
@@ -232,7 +222,7 @@ advanceZone model =
   , remainingZones = List.tail model.remainingZones |> Maybe.withDefault []
   , playerCoordinates = newZone.entrance }
 
-enterShop model = { model | shopViewOpen = True }
+enterShop model = { model | activeView = Shop }
 
 ----------------------------
 -- VIEW --------------------
@@ -273,7 +263,7 @@ drawZoneAndControls model =
       , button [ onClick MovePlayerUp ] [ text "Up" ]
       , button [ onClick MovePlayerDown ] [ text "Down" ]
       , button [ onClick MovePlayerRight ] [ text "Right" ] ]
-    , div [ style "display" (if model.shopViewOpen then "block" else "none") ]
+    , div [ style "display" (if model.activeView == Shop then "block" else "none") ]
         [ text "You are in the shop"
       , button [ onClick LeaveShop ] [ text "Leave Shop" ] ] ]
 
@@ -302,11 +292,11 @@ drawMenu model =
     [ button
       [ onClick OpenMenu
       , style "margin" "5px"
-      , style "display" (if model.menuViewOpen then "none" else "block")] [ text "Open Menu" ]
+      , style "display" (if model.activeView == MainMenu then "none" else "block")] [ text "Open Menu" ]
     , div
       [ style "border" "solid black 1px"
       , style "margin" "5px"
-      , style "display" (if model.menuViewOpen then "flex" else "none")
+      , style "display" (if model.activeView == MainMenu then "flex" else "none")
       , style "flex-direction" "column"
       , style "align-items" "center"]
       [ div [ style "padding" "5px 10px" ] [ text "Menu" ]
@@ -323,7 +313,7 @@ drawBag model =
   div
     [ style "border" "solid black 1px"
     , style "margin" "5px"
-    , style "display" (if (model.bagViewOpen) then "flex" else "none" )
+    , style "display" (if (model.activeView == Bag) then "flex" else "none" )
     , style "flex-direction" "column"]
   [ div [ style "padding" "5px 10px" ] [text "Bag"]
   , div
@@ -331,7 +321,7 @@ drawBag model =
     , style "flex-direction" "column"] (List.map drawBagItem model.bag)
   , button [ onClick CloseBag, style "margin" "5px 10px" ] [ text "Close" ] ]
 
-drawBagItem: BagItem -> Html Msg
+drawBagItem: HeldItem -> Html Msg
 drawBagItem bagItem =
   div
     [ style "padding" "5px 10px"]
@@ -349,8 +339,7 @@ drawBagItem bagItem =
 
 drawItemAssignment: Model -> Html Msg
 drawItemAssignment model =
-  case model.itemAssignmentView of
-    ItemAssignmentViewClosed -> div [ style "display" "none" ] []
+  case model.activeView of
     ItemAssignmentViewOpen item ->
       div
         [ style "border" "solid black 1px"
@@ -361,8 +350,9 @@ drawItemAssignment model =
           [ style "display" "flex"
           , style "flex-direction" "column"] (List.map (drawItemAssignmentPartyMember item) model.party)
           , button [ onClick CloseItemAssignment, style "margin" "5px 10px" ] [ text "Close" ]]
+    _ -> div [ style "display" "none" ] []
 
-drawItemAssignmentPartyMember: BagItem -> PartyMember -> Html Msg
+drawItemAssignmentPartyMember: HeldItem -> Character -> Html Msg
 drawItemAssignmentPartyMember item partyMember =
   button
     [onClick (PerformItemAssignment partyMember item)] [ text (partyMember.elementalType ++ partyMember.class) ]
@@ -372,7 +362,7 @@ drawParty model =
   div
     [ style "border" "solid black 1px"
     , style "margin" "5px"
-    , style "display" (if (model.partyViewOpen) then "flex" else "none" )
+    , style "display" (if (model.activeView == Party) then "flex" else "none" )
     , style "flex-direction" "column"]
   [ div [ style "padding" "5px 10px" ] [text "Party"]
   , div
@@ -380,7 +370,7 @@ drawParty model =
     , style "flex-direction" "column"] (List.map drawPartyMember model.party)
   , button [ onClick CloseParty, style "margin" "5px 10px" ] [ text "Close" ]]
 
-drawPartyMember: PartyMember -> Html Msg
+drawPartyMember: Character -> Html Msg
 drawPartyMember partyMember =
   div
     [ style "padding" "5px 10px"]
@@ -392,7 +382,7 @@ drawPartyMember partyMember =
       [ button [ onClick (ReturnAssignedItem partyMember) ] [text "Return Item"] ]
     , div [] [ button [ onClick (MovePartyMemberToReserve partyMember) ] [ text "Move to Reserve" ] ]]
 
-drawPartyMemberHeldItem: Maybe BagItem -> Html Msg
+drawPartyMemberHeldItem: Maybe HeldItem -> Html Msg
 drawPartyMemberHeldItem bagItem =
   case bagItem of
     Nothing -> div [ style "display" "none" ] []
@@ -403,19 +393,19 @@ drawReserve model =
   div
     [ style "border" "solid black 1px"
     , style "margin" "5px"
-    , style "display" (if (model.reserveViewOpen) then "flex" else "none" )
+    , style "display" (if (model.activeView == Reserve) then "flex" else "none" )
     , style "flex-direction" "column"]
   [ div [ style "padding" "5px 10px" ] [text "Reserve"]
   , div
     [ style "display" "flex"
-    , style "flex-direction" "column"] (List.map drawReserveMember model.reserveParty)
+    , style "flex-direction" "column"] (List.map drawReserveMember model.reserve)
   , button [ onClick CloseReserve, style "margin" "5px 10px" ] [ text "Close" ] ]
 
 drawAddNewMemberButton: Model -> Html Msg
 drawAddNewMemberButton model =
   div []
     [ button
-      [ onClick (AddNewMember
+      [ onClick (AddNewPartyMember
         { class = "Mage"-- Random.generate getRandomClass
         , elementalType = "Dark"-- Random.map getRandomClass
         , heldItem = Nothing } )]
@@ -440,7 +430,7 @@ drawAddNewMemberButton model =
 --     3 -> "Light"
 --     _ -> "Dark"
 
-drawReserveMember: PartyMember -> Html Msg
+drawReserveMember: Character -> Html Msg
 drawReserveMember reserveMember =
   div
     [ style "padding" "5px 10px"]
@@ -449,7 +439,7 @@ drawReserveMember reserveMember =
     , drawReserveMemberHeldItem reserveMember.heldItem
     , div [] [ button [ onClick (MoveReserveMemberToParty reserveMember) ] [ text "Move to Party" ] ]]
 
-drawReserveMemberHeldItem: Maybe BagItem -> Html Msg
+drawReserveMemberHeldItem: Maybe HeldItem -> Html Msg
 drawReserveMemberHeldItem bagItem =
   case bagItem of
     Nothing -> div [ style "display" "none" ] []
