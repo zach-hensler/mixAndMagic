@@ -1,7 +1,6 @@
 # Features
 ## MVP Features
 ### Party Members
-- replace character types with species
 - implement character stats (with class & species influence)
 - rng character generation
 - add max amount of total members (party + reserve)
@@ -36,7 +35,7 @@
 - Show only one view at a time
 - Mobile Friendly
 
-11## Post MVP Features
+## Post MVP Features
 - webgl graphics
 - sprites
 - animations

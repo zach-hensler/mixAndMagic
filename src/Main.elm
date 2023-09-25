@@ -30,7 +30,7 @@ maxPartySize = 3
 
 type alias Coordinates = (Int, Int)
 type alias HeldItem = { name: String, description: String, numberAvailable: Int, numberOwned: Int }
-type alias Character = { class: String, elementalType: String, heldItem: Maybe HeldItem }
+type alias Character = { class: String, species: String, heldItem: Maybe HeldItem }
 
 type ActiveView = Map | MainMenu | Bag | Party | Reserve | ItemAssignmentViewOpen HeldItem | Shop
 
@@ -73,8 +73,8 @@ init =
     , { name = "Wooden Shield", description = "Take 20% less damage, but take 2x fire damage", numberAvailable = 1, numberOwned = 1 }
     , { name = "Hideous Hat", description = "A hat so ugly that enemies are sure to target you first", numberAvailable = 1, numberOwned = 1 }]
   , party =
-    [ { class = "Mage", elementalType = "Fire", heldItem = Nothing }
-    , { class = "Healer", elementalType = "Light", heldItem = Nothing }]
+    [ { class = "Mage", species = "Human", heldItem = Nothing }
+    , { class = "Healer", species = "Elf", heldItem = Nothing }]
   , reserve = []}
 
 finalZone: Zone
@@ -355,7 +355,7 @@ drawItemAssignment model =
 drawItemAssignmentPartyMember: HeldItem -> Character -> Html Msg
 drawItemAssignmentPartyMember item partyMember =
   button
-    [onClick (PerformItemAssignment partyMember item)] [ text (partyMember.elementalType ++ partyMember.class) ]
+    [onClick (PerformItemAssignment partyMember item)] [ text (partyMember.species ++ partyMember.class) ]
 
 drawParty: Model -> Html Msg
 drawParty model =
@@ -375,7 +375,7 @@ drawPartyMember partyMember =
   div
     [ style "padding" "5px 10px"]
     [ hr [ style "width" "85%", style "color" "lightgray" ] []
-    , div [ style "font-weight" "bold" ] [text (partyMember.elementalType ++ " " ++ partyMember.class) ]
+    , div [ style "font-weight" "bold" ] [text (partyMember.species ++ " " ++ partyMember.class) ]
     , drawPartyMemberHeldItem partyMember.heldItem
     , div
       [ style "display" (if (partyMember.heldItem == Nothing) then "none" else "block")]
@@ -406,36 +406,17 @@ drawAddNewMemberButton model =
   div []
     [ button
       [ onClick (AddNewPartyMember
-        { class = "Mage"-- Random.generate getRandomClass
-        , elementalType = "Dark"-- Random.map getRandomClass
+        { class = "Mage"
+        , species = "Wolf"
         , heldItem = Nothing } )]
       [ text "Add new member" ]]
-
---getRandomClass: Random.Generator String
---getRandomClass = Random.Pcg.sample
-  --let randomNumber = Random.int 0 3 in
-  --case randomNumber of
-  --  0 -> "Cleric"
-  --  1 -> "Mage"
-  --  2 -> "Fighter"
-  --  _ -> "Tank"
-
---getRandomType: String
---getRandomType =
---  let randomNumber = Random.int 0 4 in
---   case randomNumber of
---     0 -> "Fire"
---     1 -> "Water"
---     2 -> "Earth"
---     3 -> "Light"
---     _ -> "Dark"
 
 drawReserveMember: Character -> Html Msg
 drawReserveMember reserveMember =
   div
     [ style "padding" "5px 10px"]
     [ hr [ style "width" "85%", style "color" "lightgray" ] []
-    , div [ style "font-weight" "bold" ] [text (reserveMember.elementalType ++ " " ++ reserveMember.class) ]
+    , div [ style "font-weight" "bold" ] [text (reserveMember.species ++ " " ++ reserveMember.class) ]
     , drawReserveMemberHeldItem reserveMember.heldItem
     , div [] [ button [ onClick (MoveReserveMemberToParty reserveMember) ] [ text "Move to Party" ] ]]
 
