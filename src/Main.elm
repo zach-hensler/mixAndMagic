@@ -157,20 +157,22 @@ update msg model =
       else { model | party = List.append model.party [character] }
     OpenItemAssigment item ->
       { model | activeView = if item.numberAvailable > 0 then (ItemAssignmentViewOpen item) else Bag }
-    CloseItemAssignment -> { model | activeView = Bag }
+    CloseItemAssignment -> showBag model
     PerformItemAssignment character item ->
       if (character.heldItem == Nothing)
-      then assignItem character item model
-      else (returnAssignedItem model character) |> (assignItem character item)
+      then assignItem character item model |> showBag
+      else (returnAssignedItem model character) |> (assignItem character item) |> showBag
     ReturnAssignedItem member -> returnAssignedItem model member
+
+showBag: Model -> Model
+showBag model = { model | activeView = Bag }
 
 assignItem: Character -> HeldItem -> Model -> Model
 assignItem character item model =
   let newItem = { item | numberAvailable = item.numberAvailable - 1 } in
   { model
   | party = replacePartyMember { character | heldItem = Just newItem } { character | heldItem = Nothing } model.party
-  , bag = replaceBagItem newItem item model.bag
-  , activeView = Bag}
+  , bag = replaceBagItem newItem item model.bag}
 
 returnAssignedItem: Model -> Character -> Model
 returnAssignedItem model character =
@@ -178,8 +180,7 @@ returnAssignedItem model character =
     Nothing -> model
     Just item -> { model
             | party = replacePartyMember { character | heldItem = Nothing } character model.party
-            , bag = replaceBagItem { item | numberAvailable = item.numberAvailable + 1 } item model.bag
-            , activeView = Bag}
+            , bag = replaceBagItem { item | numberAvailable = item.numberAvailable + 1 } item model.bag}
 
 replaceBagItem: HeldItem -> HeldItem -> List HeldItem -> List HeldItem
 replaceBagItem newItem oldItem itemList =

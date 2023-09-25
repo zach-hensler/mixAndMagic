@@ -4521,8 +4521,8 @@ var $author$project$Main$init = {
 	defaultZone: $author$project$Main$finalZone,
 	party: _List_fromArray(
 		[
-			{_class: 'Mage', elementalType: 'Fire', heldItem: $elm$core$Maybe$Nothing},
-			{_class: 'Healer', elementalType: 'Light', heldItem: $elm$core$Maybe$Nothing}
+			{_class: 'Mage', heldItem: $elm$core$Maybe$Nothing, species: 'Human'},
+			{_class: 'Healer', heldItem: $elm$core$Maybe$Nothing, species: 'Elf'}
 		]),
 	playerCoordinates: _Utils_Tuple2(1, 1),
 	remainingZones: _List_fromArray(
@@ -5299,7 +5299,6 @@ var $author$project$Main$assignItem = F3(
 		return _Utils_update(
 			model,
 			{
-				activeView: $author$project$Main$Bag,
 				bag: A3($author$project$Main$replaceBagItem, newItem, item, model.bag),
 				party: A3(
 					$author$project$Main$replacePartyMember,
@@ -5457,7 +5456,6 @@ var $author$project$Main$returnAssignedItem = F2(
 			return _Utils_update(
 				model,
 				{
-					activeView: $author$project$Main$Bag,
 					bag: A3(
 						$author$project$Main$replaceBagItem,
 						_Utils_update(
@@ -5475,6 +5473,11 @@ var $author$project$Main$returnAssignedItem = F2(
 				});
 		}
 	});
+var $author$project$Main$showBag = function (model) {
+	return _Utils_update(
+		model,
+		{activeView: $author$project$Main$Bag});
+};
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -5621,17 +5624,17 @@ var $author$project$Main$update = F2(
 						activeView: (item.numberAvailable > 0) ? $author$project$Main$ItemAssignmentViewOpen(item) : $author$project$Main$Bag
 					});
 			case 'CloseItemAssignment':
-				return _Utils_update(
-					model,
-					{activeView: $author$project$Main$Bag});
+				return $author$project$Main$showBag(model);
 			case 'PerformItemAssignment':
 				var character = msg.a;
 				var item = msg.b;
-				return _Utils_eq(character.heldItem, $elm$core$Maybe$Nothing) ? A3($author$project$Main$assignItem, character, item, model) : A3(
-					$author$project$Main$assignItem,
-					character,
-					item,
-					A2($author$project$Main$returnAssignedItem, model, character));
+				return _Utils_eq(character.heldItem, $elm$core$Maybe$Nothing) ? $author$project$Main$showBag(
+					A3($author$project$Main$assignItem, character, item, model)) : $author$project$Main$showBag(
+					A3(
+						$author$project$Main$assignItem,
+						character,
+						item,
+						A2($author$project$Main$returnAssignedItem, model, character)));
 			default:
 				var member = msg.a;
 				return A2($author$project$Main$returnAssignedItem, model, member);
@@ -5673,7 +5676,7 @@ var $author$project$Main$drawAddNewMemberButton = function (model) {
 					[
 						$elm$html$Html$Events$onClick(
 						$author$project$Main$AddNewPartyMember(
-							{_class: 'Mage', elementalType: 'Dark', heldItem: $elm$core$Maybe$Nothing}))
+							{_class: 'Mage', heldItem: $elm$core$Maybe$Nothing, species: 'Wolf'}))
 					]),
 				_List_fromArray(
 					[
@@ -5826,7 +5829,7 @@ var $author$project$Main$drawItemAssignmentPartyMember = F2(
 			_List_fromArray(
 				[
 					$elm$html$Html$text(
-					_Utils_ap(partyMember.elementalType, partyMember._class))
+					_Utils_ap(partyMember.species, partyMember._class))
 				]));
 	});
 var $author$project$Main$drawItemAssignment = function (model) {
@@ -6076,7 +6079,7 @@ var $author$project$Main$drawPartyMember = function (partyMember) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text(partyMember.elementalType + (' ' + partyMember._class))
+						$elm$html$Html$text(partyMember.species + (' ' + partyMember._class))
 					])),
 				$author$project$Main$drawPartyMemberHeldItem(partyMember.heldItem),
 				A2(
@@ -6216,7 +6219,7 @@ var $author$project$Main$drawReserveMember = function (reserveMember) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text(reserveMember.elementalType + (' ' + reserveMember._class))
+						$elm$html$Html$text(reserveMember.species + (' ' + reserveMember._class))
 					])),
 				$author$project$Main$drawReserveMemberHeldItem(reserveMember.heldItem),
 				A2(
