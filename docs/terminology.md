@@ -15,6 +15,7 @@
 | Attack          | A stat that determines how much damage the character delivers                                     |
 | Speed           | A stat that determines turn order during battle                                                   |
 | Party           | A collection of characters that participates in a battle                                          |
+| Map             | An individual area for the player to move around in, includes the hub and dungeon floors          |
 | Hub             | A starting location for the player, without enemies, where they can adjust their party            |
 | Dungeon         | A series of floors that the user can enter with a party, partake in battle, and receive rewards   |
 | Floor           | A section of a dungeon with that contains enemies, an entrance, and an exit                       |

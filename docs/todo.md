@@ -3,7 +3,6 @@
 ### Party Members
 - implement character stats (with class & species influence)
 - rng character generation
-- add max amount of total members (party + reserve)
 - allow multiple members of the same class & type
   - (currently buggy w/ moving members to/from reserve)
   - could give all members a uuid to differentiate
@@ -14,8 +13,8 @@
 - add ability to buy items from the shop
 
 ### Map
-- implement hub
-- implement multiple dungeons that the user can enter
+- replace map letters with icons
+- give each exit a custom icon
 - implement procedurally generated dungeon floors
 
 ### ETC
@@ -35,6 +34,7 @@
 - Show only one view at a time
 - Mobile Friendly
 
+---
 ## Post MVP Features
 - webgl graphics
 - sprites

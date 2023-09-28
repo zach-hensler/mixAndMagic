@@ -36,8 +36,8 @@
 
 ### Consumable Items
 - red elixir - heals damage
-- blue elixir - increases attack for this zone
-- green elixir - increases defense for this zone
+- blue elixir - increases attack for one character temporarily
+- green elixir - increases defense for one character temporarily
 
 ## Characters
 - A character has:
