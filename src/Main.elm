@@ -5,6 +5,7 @@ import Browser
 import Html exposing (Html, button, div, hr, span, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import Map
 
 
 
@@ -34,19 +35,13 @@ type alias Character = { class: String, species: String, heldItem: Maybe HeldIte
 
 type ActiveView = Map | MainMenu | Bag | Party | Reserve | ItemAssignmentViewOpen HeldItem | Shop
 
-type alias Zone =
-  { borders: List Coordinates
-  , entrance: Coordinates
-  , exit: Coordinates
-  , shop: Coordinates
-  , width: Int
-  , height: Int}
 
 type alias Model =
   { playerCoordinates: Coordinates
-  , currentZone: Zone
-  , remainingZones: List Zone
-  , defaultZone: Zone
+  , dungeon1Complete: Bool
+  , dungeon2Complete: Bool
+  , dungeon3Complete: Bool
+  , currentMap: Map.Map
   , activeView: ActiveView
   , bag: List HeldItem
   , party: List Character
@@ -54,16 +49,11 @@ type alias Model =
 
 init : Model
 init =
-  { playerCoordinates = (1, 1)
-  , currentZone =
-    { borders = [(5,0), (4, 0), (5,1)]
-    , entrance = (0, 0)
-    , exit = (5, 5)
-    , shop = (3, 3)
-    , width = 5
-    , height = 5 }
-  , remainingZones = [finalZone]
-  , defaultZone = finalZone
+  { playerCoordinates = (Map.hubMap False False False).entrance
+  , dungeon1Complete = False
+  , dungeon2Complete = False
+  , dungeon3Complete = False
+  , currentMap = Map.hubMap False False False
   , activeView = Map
   , bag =
     [ { name = "Enchanted Gloves", description = "All contact moves have a random secondary effect", numberAvailable = 1, numberOwned = 1 }
@@ -76,19 +66,6 @@ init =
     [ { class = "Mage", species = "Human", heldItem = Nothing }
     , { class = "Healer", species = "Elf", heldItem = Nothing }]
   , reserve = []}
-
-finalZone: Zone
-finalZone =
-  { borders =
-    [ (0, 0), (1, 0), (2, 0), (3, 0), (4, 0)
-    , (0, 1), (0, 2), (0, 3), (0, 4)
-    , (4, 1), (4, 2), (4, 3), (4, 4)
-    , (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]
-  , entrance = (2, 2)
-  , exit = (5, 5)
-  , shop = (5, 5)
-  , width = 4
-  , height = 4}
 
 
 ----------------------------
@@ -201,27 +178,39 @@ moveToNewSpace newPlayerCoordinates model = { model | playerCoordinates =
 
 isForbiddenSpace: Model -> (Int, Int) -> Bool
 isForbiddenSpace model (newPlayerXPos, newPlayerYPos) =
-  if newPlayerXPos > model.currentZone.width
-  || newPlayerYPos > model.currentZone.height
+  if newPlayerXPos >= model.currentMap.width
+  || newPlayerYPos >= model.currentMap.height
   || newPlayerXPos < 0
   || newPlayerYPos < 0
-  || List.member (newPlayerXPos, newPlayerYPos) model.currentZone.borders
+  || List.member (newPlayerXPos, newPlayerYPos) model.currentMap.obstacles
   then True
   else False
 
 handleMapInteractions: Model -> Model
 handleMapInteractions model =
-  if model.playerCoordinates == model.currentZone.exit then advanceZone model
-  else if model.playerCoordinates == model.currentZone.shop then enterShop model
+  if List.any (\(Map.Exit { coordinates }) -> coordinates == model.playerCoordinates) model.currentMap.exits
+  then unlockNextDungeon  model |> advanceMap
+  else if Just model.playerCoordinates == model.currentMap.shop
+  then enterShop model
   else model
 
-advanceZone: Model -> Model
-advanceZone model =
-  let newZone = List.head model.remainingZones |> Maybe.withDefault model.defaultZone in
-  { model
-  | currentZone = newZone
-  , remainingZones = List.tail model.remainingZones |> Maybe.withDefault []
-  , playerCoordinates = newZone.entrance }
+advanceMap: Model -> Model
+advanceMap model =
+  let (Map.Exit { nextMap, exitOpen, isDungeonExit }) = Map.findExitByCoordinates model.playerCoordinates model.currentMap.exits in
+  let nextMapWithDefault = nextMap |> Maybe.withDefault (Map.hubMap model.dungeon1Complete model.dungeon2Complete model.dungeon3Complete) in
+  if exitOpen then { model
+                   | currentMap = nextMapWithDefault
+                   , playerCoordinates = nextMapWithDefault.entrance }
+  else model
+
+unlockNextDungeon: Model -> Model
+unlockNextDungeon model =
+  let (Map.Exit { exitOpen, isDungeonExit }) = Map.findExitByCoordinates model.playerCoordinates model.currentMap.exits in
+  if (not exitOpen || not isDungeonExit) then model
+  else if not model.dungeon1Complete then { model | dungeon1Complete = True }
+  else if not model.dungeon2Complete then { model | dungeon2Complete = True }
+  else if not model.dungeon3Complete then { model | dungeon3Complete = True }
+  else model
 
 enterShop model = { model | activeView = Shop }
 
@@ -240,7 +229,7 @@ view model =
   , style "align-items" "center"
   , style "text-align" "center"
   ]
-  [ drawZoneAndControls model
+  [ drawMapAndControls model
   , drawMenu model
   , drawBag model
   , drawItemAssignment model
@@ -249,13 +238,13 @@ view model =
   , drawAddNewMemberButton model
   ]
 
-drawZoneAndControls: Model -> Html Msg
-drawZoneAndControls model =
+drawMapAndControls: Model -> Html Msg
+drawMapAndControls model =
   div []
     [ div
       [ style "display" "flex"
       , style "flex-direction" "column"
-      ] (List.map (drawZoneRow model) (List.range 0 model.currentZone.height))
+      ] (List.map (drawMapRow model) (List.range 0 (model.currentMap.height - 1)))
     , div
       [ style "margin" "10px 0"
       , style "display" "flex"
@@ -268,12 +257,12 @@ drawZoneAndControls model =
         [ text "You are in the shop"
       , button [ onClick LeaveShop ] [ text "Leave Shop" ] ] ]
 
-drawZoneRow: Model -> Int -> Html Msg
-drawZoneRow model yCoordinate =
-  div[style "display" "flex"](List.map (drawZoneSquare model yCoordinate) (List.range 0 model.currentZone.width))
+drawMapRow: Model -> Int -> Html Msg
+drawMapRow model yCoordinate =
+  div[style "display" "flex"](List.map (drawMapSquare model yCoordinate) (List.range 0 (model.currentMap.width - 1)))
 
-drawZoneSquare: Model -> Int -> Int -> Html Msg
-drawZoneSquare model yCoordinate xCoordinate =
+drawMapSquare: Model -> Int -> Int -> Html Msg
+drawMapSquare model yCoordinate xCoordinate =
   div
     [ style "border" "solid black 1px"
     , style "padding" "5px"
@@ -281,9 +270,11 @@ drawZoneSquare model yCoordinate xCoordinate =
     , style "height" "40px"
     ]
     [ if (xCoordinate, yCoordinate) == model.playerCoordinates then text "P"
-      else if (xCoordinate, yCoordinate) == (model.currentZone.shop) then text "S"
-      else if (xCoordinate, yCoordinate) == model.currentZone.exit then text "X"
-      else if List.member (xCoordinate, yCoordinate) model.currentZone.borders then text "*"
+      else if Just (xCoordinate, yCoordinate) == (model.currentMap.shop) then text "S"
+      else if List.any (\(Map.Exit { coordinates }) -> coordinates == (xCoordinate, yCoordinate)) model.currentMap.exits
+        then let (Map.Exit { exitOpen }) = (Map.findExitByCoordinates (xCoordinate, yCoordinate) model.currentMap.exits) in
+          if exitOpen then text "O" else text "X"
+      else if List.member (xCoordinate, yCoordinate) model.currentMap.obstacles then text "*"
       else text " "
     ]
 

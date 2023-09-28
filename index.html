@@ -4464,36 +4464,144 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
+var $elm$core$Basics$False = {$: 'False'};
 var $author$project$Main$Map = {$: 'Map'};
 var $elm$core$Maybe$Nothing = {$: 'Nothing'};
-var $author$project$Main$finalZone = {
-	borders: _List_fromArray(
-		[
-			_Utils_Tuple2(0, 0),
-			_Utils_Tuple2(1, 0),
-			_Utils_Tuple2(2, 0),
-			_Utils_Tuple2(3, 0),
-			_Utils_Tuple2(4, 0),
-			_Utils_Tuple2(0, 1),
-			_Utils_Tuple2(0, 2),
-			_Utils_Tuple2(0, 3),
-			_Utils_Tuple2(0, 4),
-			_Utils_Tuple2(4, 1),
-			_Utils_Tuple2(4, 2),
-			_Utils_Tuple2(4, 3),
-			_Utils_Tuple2(4, 4),
-			_Utils_Tuple2(0, 4),
-			_Utils_Tuple2(1, 4),
-			_Utils_Tuple2(2, 4),
-			_Utils_Tuple2(3, 4),
-			_Utils_Tuple2(4, 4)
-		]),
-	entrance: _Utils_Tuple2(2, 2),
-	exit: _Utils_Tuple2(5, 5),
-	height: 4,
-	shop: _Utils_Tuple2(5, 5),
-	width: 4
+var $elm$core$Basics$identity = function (x) {
+	return x;
 };
+var $author$project$Map$Exit = function (a) {
+	return {$: 'Exit', a: a};
+};
+var $elm$core$Maybe$Just = function (a) {
+	return {$: 'Just', a: a};
+};
+var $elm$core$Basics$True = {$: 'True'};
+var $author$project$Map$dungeon1Floor2 = {
+	campfire: $elm$core$Maybe$Nothing,
+	entrance: _Utils_Tuple2(0, 0),
+	exits: _List_fromArray(
+		[
+			$author$project$Map$Exit(
+			{
+				coordinates: _Utils_Tuple2(6, 0),
+				exitOpen: true,
+				isDungeonExit: true,
+				nextMap: $elm$core$Maybe$Nothing
+			})
+		]),
+	height: 1,
+	obstacles: _List_Nil,
+	shop: $elm$core$Maybe$Nothing,
+	width: 7
+};
+var $author$project$Map$dungeon1Floor1 = {
+	campfire: $elm$core$Maybe$Nothing,
+	entrance: _Utils_Tuple2(1, 1),
+	exits: _List_fromArray(
+		[
+			$author$project$Map$Exit(
+			{
+				coordinates: _Utils_Tuple2(9, 4),
+				exitOpen: true,
+				isDungeonExit: false,
+				nextMap: $elm$core$Maybe$Just($author$project$Map$dungeon1Floor2)
+			})
+		]),
+	height: 5,
+	obstacles: _List_Nil,
+	shop: $elm$core$Maybe$Nothing,
+	width: 10
+};
+var $author$project$Map$dungeon2Floor2 = {
+	campfire: $elm$core$Maybe$Nothing,
+	entrance: _Utils_Tuple2(0, 0),
+	exits: _List_fromArray(
+		[
+			$author$project$Map$Exit(
+			{
+				coordinates: _Utils_Tuple2(1, 11),
+				exitOpen: true,
+				isDungeonExit: true,
+				nextMap: $elm$core$Maybe$Nothing
+			})
+		]),
+	height: 12,
+	obstacles: _List_Nil,
+	shop: $elm$core$Maybe$Nothing,
+	width: 2
+};
+var $author$project$Map$dungeon2Floor1 = {
+	campfire: $elm$core$Maybe$Nothing,
+	entrance: _Utils_Tuple2(1, 1),
+	exits: _List_fromArray(
+		[
+			$author$project$Map$Exit(
+			{
+				coordinates: _Utils_Tuple2(4, 9),
+				exitOpen: true,
+				isDungeonExit: false,
+				nextMap: $elm$core$Maybe$Just($author$project$Map$dungeon2Floor2)
+			})
+		]),
+	height: 10,
+	obstacles: _List_Nil,
+	shop: $elm$core$Maybe$Nothing,
+	width: 5
+};
+var $author$project$Map$dungeon3Floor1 = {
+	campfire: $elm$core$Maybe$Nothing,
+	entrance: _Utils_Tuple2(1, 1),
+	exits: _List_fromArray(
+		[
+			$author$project$Map$Exit(
+			{
+				coordinates: _Utils_Tuple2(9, 9),
+				exitOpen: true,
+				isDungeonExit: true,
+				nextMap: $elm$core$Maybe$Nothing
+			})
+		]),
+	height: 10,
+	obstacles: _List_Nil,
+	shop: $elm$core$Maybe$Nothing,
+	width: 10
+};
+var $author$project$Map$hubMap = F3(
+	function (dungeon1Complete, dungeon2Complete, dungeon3Complete) {
+		return {
+			campfire: $elm$core$Maybe$Nothing,
+			entrance: _Utils_Tuple2(3, 9),
+			exits: _List_fromArray(
+				[
+					$author$project$Map$Exit(
+					{
+						coordinates: _Utils_Tuple2(0, 2),
+						exitOpen: true,
+						isDungeonExit: false,
+						nextMap: $elm$core$Maybe$Just($author$project$Map$dungeon1Floor1)
+					}),
+					$author$project$Map$Exit(
+					{
+						coordinates: _Utils_Tuple2(3, 0),
+						exitOpen: dungeon1Complete,
+						isDungeonExit: false,
+						nextMap: $elm$core$Maybe$Just($author$project$Map$dungeon2Floor1)
+					}),
+					$author$project$Map$Exit(
+					{
+						coordinates: _Utils_Tuple2(6, 2),
+						exitOpen: dungeon2Complete,
+						isDungeonExit: false,
+						nextMap: $elm$core$Maybe$Just($author$project$Map$dungeon3Floor1)
+					})
+				]),
+			height: 10,
+			obstacles: _List_Nil,
+			shop: $elm$core$Maybe$Nothing,
+			width: 7
+		};
+	});
 var $author$project$Main$init = {
 	activeView: $author$project$Main$Map,
 	bag: _List_fromArray(
@@ -4505,28 +4613,16 @@ var $author$project$Main$init = {
 			{description: 'Take 20% less damage, but take 2x fire damage', name: 'Wooden Shield', numberAvailable: 1, numberOwned: 1},
 			{description: 'A hat so ugly that enemies are sure to target you first', name: 'Hideous Hat', numberAvailable: 1, numberOwned: 1}
 		]),
-	currentZone: {
-		borders: _List_fromArray(
-			[
-				_Utils_Tuple2(5, 0),
-				_Utils_Tuple2(4, 0),
-				_Utils_Tuple2(5, 1)
-			]),
-		entrance: _Utils_Tuple2(0, 0),
-		exit: _Utils_Tuple2(5, 5),
-		height: 5,
-		shop: _Utils_Tuple2(3, 3),
-		width: 5
-	},
-	defaultZone: $author$project$Main$finalZone,
+	currentMap: A3($author$project$Map$hubMap, false, false, false),
+	dungeon1Complete: false,
+	dungeon2Complete: false,
+	dungeon3Complete: false,
 	party: _List_fromArray(
 		[
 			{_class: 'Mage', heldItem: $elm$core$Maybe$Nothing, species: 'Human'},
 			{_class: 'Healer', heldItem: $elm$core$Maybe$Nothing, species: 'Elf'}
 		]),
-	playerCoordinates: _Utils_Tuple2(1, 1),
-	remainingZones: _List_fromArray(
-		[$author$project$Main$finalZone]),
+	playerCoordinates: A3($author$project$Map$hubMap, false, false, false).entrance,
 	reserve: _List_Nil
 };
 var $elm$core$Result$Err = function (a) {
@@ -4550,11 +4646,7 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
-var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
-var $elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
-};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -4915,7 +5007,6 @@ var $elm$core$Array$initialize = F2(
 			return A5($elm$core$Array$initializeHelp, fn, initialFromIndex, len, _List_Nil, tail);
 		}
 	});
-var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$Result$isOk = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -4943,9 +5034,6 @@ var $elm$browser$Browser$External = function (a) {
 };
 var $elm$browser$Browser$Internal = function (a) {
 	return {$: 'Internal', a: a};
-};
-var $elm$core$Basics$identity = function (x) {
-	return x;
 };
 var $elm$browser$Browser$Dom$NotFound = function (a) {
 	return {$: 'NotFound', a: a};
@@ -5334,15 +5422,6 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$List$tail = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(xs);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -5352,53 +5431,39 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var $author$project$Main$advanceZone = function (model) {
-	var newZone = A2(
+var $author$project$Map$findExitByCoordinates = F2(
+	function (searchCoordinates, exitList) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			$author$project$Map$Exit(
+				{
+					coordinates: _Utils_Tuple2(9, 4),
+					exitOpen: true,
+					isDungeonExit: false,
+					nextMap: $elm$core$Maybe$Nothing
+				}),
+			$elm$core$List$head(
+				A2(
+					$elm$core$List$filter,
+					function (_v0) {
+						var coordinates = _v0.a.coordinates;
+						return _Utils_eq(coordinates, searchCoordinates);
+					},
+					exitList)));
+	});
+var $author$project$Main$advanceMap = function (model) {
+	var _v0 = A2($author$project$Map$findExitByCoordinates, model.playerCoordinates, model.currentMap.exits);
+	var nextMap = _v0.a.nextMap;
+	var exitOpen = _v0.a.exitOpen;
+	var isDungeonExit = _v0.a.isDungeonExit;
+	var nextMapWithDefault = A2(
 		$elm$core$Maybe$withDefault,
-		model.defaultZone,
-		$elm$core$List$head(model.remainingZones));
-	return _Utils_update(
+		A3($author$project$Map$hubMap, model.dungeon1Complete, model.dungeon2Complete, model.dungeon3Complete),
+		nextMap);
+	return exitOpen ? _Utils_update(
 		model,
-		{
-			currentZone: newZone,
-			playerCoordinates: newZone.entrance,
-			remainingZones: A2(
-				$elm$core$Maybe$withDefault,
-				_List_Nil,
-				$elm$core$List$tail(model.remainingZones))
-		});
+		{currentMap: nextMapWithDefault, playerCoordinates: nextMapWithDefault.entrance}) : model;
 };
-var $author$project$Main$Shop = {$: 'Shop'};
-var $author$project$Main$enterShop = function (model) {
-	return _Utils_update(
-		model,
-		{activeView: $author$project$Main$Shop});
-};
-var $author$project$Main$handleMapInteractions = function (model) {
-	return _Utils_eq(model.playerCoordinates, model.currentZone.exit) ? $author$project$Main$advanceZone(model) : (_Utils_eq(model.playerCoordinates, model.currentZone.shop) ? $author$project$Main$enterShop(model) : model);
-};
-var $elm$core$Basics$not = _Basics_not;
-var $author$project$Main$isNotSamePartyMember = F2(
-	function (character1, character2) {
-		return !_Utils_eq(character1, character2);
-	});
-var $elm$core$Tuple$mapFirst = F2(
-	function (func, _v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		return _Utils_Tuple2(
-			func(x),
-			y);
-	});
-var $elm$core$Tuple$mapSecond = F2(
-	function (func, _v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		return _Utils_Tuple2(
-			x,
-			func(y));
-	});
-var $author$project$Main$maxPartySize = 3;
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -5420,6 +5485,58 @@ var $elm$core$List$any = F2(
 			}
 		}
 	});
+var $author$project$Main$Shop = {$: 'Shop'};
+var $author$project$Main$enterShop = function (model) {
+	return _Utils_update(
+		model,
+		{activeView: $author$project$Main$Shop});
+};
+var $elm$core$Basics$not = _Basics_not;
+var $author$project$Main$unlockNextDungeon = function (model) {
+	var _v0 = A2($author$project$Map$findExitByCoordinates, model.playerCoordinates, model.currentMap.exits);
+	var exitOpen = _v0.a.exitOpen;
+	var isDungeonExit = _v0.a.isDungeonExit;
+	return ((!exitOpen) || (!isDungeonExit)) ? model : ((!model.dungeon1Complete) ? _Utils_update(
+		model,
+		{dungeon1Complete: true}) : ((!model.dungeon2Complete) ? _Utils_update(
+		model,
+		{dungeon2Complete: true}) : ((!model.dungeon3Complete) ? _Utils_update(
+		model,
+		{dungeon3Complete: true}) : model)));
+};
+var $author$project$Main$handleMapInteractions = function (model) {
+	return A2(
+		$elm$core$List$any,
+		function (_v0) {
+			var coordinates = _v0.a.coordinates;
+			return _Utils_eq(coordinates, model.playerCoordinates);
+		},
+		model.currentMap.exits) ? $author$project$Main$advanceMap(
+		$author$project$Main$unlockNextDungeon(model)) : (_Utils_eq(
+		$elm$core$Maybe$Just(model.playerCoordinates),
+		model.currentMap.shop) ? $author$project$Main$enterShop(model) : model);
+};
+var $author$project$Main$isNotSamePartyMember = F2(
+	function (character1, character2) {
+		return !_Utils_eq(character1, character2);
+	});
+var $elm$core$Tuple$mapFirst = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			func(x),
+			y);
+	});
+var $elm$core$Tuple$mapSecond = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			x,
+			func(y));
+	});
+var $author$project$Main$maxPartySize = 3;
 var $elm$core$List$member = F2(
 	function (x, xs) {
 		return A2(
@@ -5433,10 +5550,10 @@ var $author$project$Main$isForbiddenSpace = F2(
 	function (model, _v0) {
 		var newPlayerXPos = _v0.a;
 		var newPlayerYPos = _v0.b;
-		return ((_Utils_cmp(newPlayerXPos, model.currentZone.width) > 0) || ((_Utils_cmp(newPlayerYPos, model.currentZone.height) > 0) || ((newPlayerXPos < 0) || ((newPlayerYPos < 0) || A2(
+		return ((_Utils_cmp(newPlayerXPos, model.currentMap.width) > -1) || ((_Utils_cmp(newPlayerYPos, model.currentMap.height) > -1) || ((newPlayerXPos < 0) || ((newPlayerYPos < 0) || A2(
 			$elm$core$List$member,
 			_Utils_Tuple2(newPlayerXPos, newPlayerYPos),
-			model.currentZone.borders))))) ? true : false;
+			model.currentMap.obstacles))))) ? true : false;
 	});
 var $author$project$Main$moveToNewSpace = F2(
 	function (newPlayerCoordinates, model) {
@@ -5889,6 +6006,172 @@ var $author$project$Main$drawItemAssignment = function (model) {
 			_List_Nil);
 	}
 };
+var $author$project$Main$LeaveShop = {$: 'LeaveShop'};
+var $author$project$Main$MovePlayerDown = {$: 'MovePlayerDown'};
+var $author$project$Main$MovePlayerLeft = {$: 'MovePlayerLeft'};
+var $author$project$Main$MovePlayerRight = {$: 'MovePlayerRight'};
+var $author$project$Main$MovePlayerUp = {$: 'MovePlayerUp'};
+var $author$project$Main$drawMapSquare = F3(
+	function (model, yCoordinate, xCoordinate) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
+					A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+					A2($elm$html$Html$Attributes$style, 'width', '40px'),
+					A2($elm$html$Html$Attributes$style, 'height', '40px')
+				]),
+			_List_fromArray(
+				[
+					function () {
+					if (_Utils_eq(
+						_Utils_Tuple2(xCoordinate, yCoordinate),
+						model.playerCoordinates)) {
+						return $elm$html$Html$text('P');
+					} else {
+						if (_Utils_eq(
+							$elm$core$Maybe$Just(
+								_Utils_Tuple2(xCoordinate, yCoordinate)),
+							model.currentMap.shop)) {
+							return $elm$html$Html$text('S');
+						} else {
+							if (A2(
+								$elm$core$List$any,
+								function (_v0) {
+									var coordinates = _v0.a.coordinates;
+									return _Utils_eq(
+										coordinates,
+										_Utils_Tuple2(xCoordinate, yCoordinate));
+								},
+								model.currentMap.exits)) {
+								var _v1 = A2(
+									$author$project$Map$findExitByCoordinates,
+									_Utils_Tuple2(xCoordinate, yCoordinate),
+									model.currentMap.exits);
+								var exitOpen = _v1.a.exitOpen;
+								return exitOpen ? $elm$html$Html$text('O') : $elm$html$Html$text('X');
+							} else {
+								if (A2(
+									$elm$core$List$member,
+									_Utils_Tuple2(xCoordinate, yCoordinate),
+									model.currentMap.obstacles)) {
+									return $elm$html$Html$text('*');
+								} else {
+									return $elm$html$Html$text(' ');
+								}
+							}
+						}
+					}
+				}()
+				]));
+	});
+var $author$project$Main$drawMapRow = F2(
+	function (model, yCoordinate) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'flex')
+				]),
+			A2(
+				$elm$core$List$map,
+				A2($author$project$Main$drawMapSquare, model, yCoordinate),
+				A2($elm$core$List$range, 0, model.currentMap.width - 1)));
+	});
+var $author$project$Main$drawMapAndControls = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
+					]),
+				A2(
+					$elm$core$List$map,
+					$author$project$Main$drawMapRow(model),
+					A2($elm$core$List$range, 0, model.currentMap.height - 1))),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'margin', '10px 0'),
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'justify-content', 'space-around')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$MovePlayerLeft)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Left')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$MovePlayerUp)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Up')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$MovePlayerDown)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Down')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$MovePlayerRight)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Right')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$Attributes$style,
+						'display',
+						_Utils_eq(model.activeView, $author$project$Main$Shop) ? 'block' : 'none')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('You are in the shop'),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$LeaveShop)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Leave Shop')
+							]))
+					]))
+			]));
+};
 var $author$project$Main$CloseMenu = {$: 'CloseMenu'};
 var $author$project$Main$OpenBag = {$: 'OpenBag'};
 var $author$project$Main$OpenMenu = {$: 'OpenMenu'};
@@ -6287,142 +6570,6 @@ var $author$project$Main$drawReserve = function (model) {
 					]))
 			]));
 };
-var $author$project$Main$LeaveShop = {$: 'LeaveShop'};
-var $author$project$Main$MovePlayerDown = {$: 'MovePlayerDown'};
-var $author$project$Main$MovePlayerLeft = {$: 'MovePlayerLeft'};
-var $author$project$Main$MovePlayerRight = {$: 'MovePlayerRight'};
-var $author$project$Main$MovePlayerUp = {$: 'MovePlayerUp'};
-var $author$project$Main$drawZoneSquare = F3(
-	function (model, yCoordinate, xCoordinate) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
-					A2($elm$html$Html$Attributes$style, 'padding', '5px'),
-					A2($elm$html$Html$Attributes$style, 'width', '40px'),
-					A2($elm$html$Html$Attributes$style, 'height', '40px')
-				]),
-			_List_fromArray(
-				[
-					_Utils_eq(
-					_Utils_Tuple2(xCoordinate, yCoordinate),
-					model.playerCoordinates) ? $elm$html$Html$text('P') : (_Utils_eq(
-					_Utils_Tuple2(xCoordinate, yCoordinate),
-					model.currentZone.shop) ? $elm$html$Html$text('S') : (_Utils_eq(
-					_Utils_Tuple2(xCoordinate, yCoordinate),
-					model.currentZone.exit) ? $elm$html$Html$text('X') : (A2(
-					$elm$core$List$member,
-					_Utils_Tuple2(xCoordinate, yCoordinate),
-					model.currentZone.borders) ? $elm$html$Html$text('*') : $elm$html$Html$text(' '))))
-				]));
-	});
-var $author$project$Main$drawZoneRow = F2(
-	function (model, yCoordinate) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'display', 'flex')
-				]),
-			A2(
-				$elm$core$List$map,
-				A2($author$project$Main$drawZoneSquare, model, yCoordinate),
-				A2($elm$core$List$range, 0, model.currentZone.width)));
-	});
-var $author$project$Main$drawZoneAndControls = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column')
-					]),
-				A2(
-					$elm$core$List$map,
-					$author$project$Main$drawZoneRow(model),
-					A2($elm$core$List$range, 0, model.currentZone.height))),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'margin', '10px 0'),
-						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-						A2($elm$html$Html$Attributes$style, 'justify-content', 'space-around')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$MovePlayerLeft)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Left')
-							])),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$MovePlayerUp)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Up')
-							])),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$MovePlayerDown)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Down')
-							])),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$MovePlayerRight)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Right')
-							]))
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$Attributes$style,
-						'display',
-						_Utils_eq(model.activeView, $author$project$Main$Shop) ? 'block' : 'none')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('You are in the shop'),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$LeaveShop)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Leave Shop')
-							]))
-					]))
-			]));
-};
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -6438,7 +6585,7 @@ var $author$project$Main$view = function (model) {
 			]),
 		_List_fromArray(
 			[
-				$author$project$Main$drawZoneAndControls(model),
+				$author$project$Main$drawMapAndControls(model),
 				$author$project$Main$drawMenu(model),
 				$author$project$Main$drawBag(model),
 				$author$project$Main$drawItemAssignment(model),
