@@ -1,6 +1,6 @@
 # Features
 ## MVP Features
-### Party Members
+### Characters
 - implement character stats (with class & species influence)
 - rng character generation
 - allow multiple members of the same class & type
@@ -9,13 +9,20 @@
 - add ability to remove party members?
 
 ### Shop
-- improve shop view
-- add ability to buy items from the shop
+- implement money
+- create shop view
+- create buying and selling functionality
+- create consumable items
+- add consumable item functionality
 
 ### Map
 - replace map letters with icons
-- give each exit a custom icon
+- give each exit a custom letter/icon
+- keep map centered around character (adjust drawing for loop to go from -x character pos to +x character pos)
 - implement procedurally generated dungeon floors
+- add campfires (or some place to heal characters mid-dungeon)
+- add enemies to map, they should trigger battle view
+- replace player on map with party members walking in a line (think pokemon mystery dungeon)
 
 ### ETC
 - find a better way to check for item/player equality than deep comparison
@@ -25,8 +32,12 @@
 
 ### Battle Mechanics
 - add battle scene
+- add experience
+- add levels
+- add level caps
 - add attacks
 - add stats
+- add status effects
 - add type mechanics
 - add held items functionality
 
@@ -38,6 +49,7 @@
 ## Post MVP Features
 - webgl graphics
 - sprites
+- player directionality (ex: I walk to the left, my character is now looking to the left)
 - animations
 - transferring save data across devices (via QR code?)
 - difficulty selector
