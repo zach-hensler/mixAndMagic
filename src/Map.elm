@@ -1,5 +1,10 @@
 module Map exposing (..)
 
+
+------------------------
+-- Types ---------------
+------------------------
+
 type alias Coordinates = (Int, Int)
 type Exit = Exit
   { coordinates: Coordinates
@@ -15,6 +20,11 @@ type alias Map =
   , campfire: Maybe Coordinates
   , obstacles: List Coordinates
   , exits: List Exit}
+
+
+------------------------
+-- Hub -----------------
+------------------------
 
 hubMap: Bool -> Bool -> Bool -> Map
 hubMap dungeon1Complete dungeon2Complete dungeon3Complete =
@@ -41,9 +51,10 @@ hubMap dungeon1Complete dungeon2Complete dungeon3Complete =
       , exitOpen = dungeon2Complete
       , isDungeonExit = False}]}
 
-------------
--- Dungeon 1
-------------
+
+------------------------
+-- Dungeon 1 -----------
+------------------------
 
 dungeon1Floor1: Map
 dungeon1Floor1 =
@@ -75,9 +86,10 @@ dungeon1Floor2 =
       , exitOpen = True
       , isDungeonExit = True}]}
 
-------------
--- Dungeon 2
-------------
+
+------------------------
+-- Dungeon 2 -----------
+------------------------
 
 dungeon2Floor1: Map
 dungeon2Floor1 =
@@ -109,9 +121,10 @@ dungeon2Floor2 =
       , exitOpen = True
       , isDungeonExit = True}]}
 
-------------
--- Dungeon 3
-------------
+
+------------------------
+-- Dungeon 3 -----------
+------------------------
 
 dungeon3Floor1: Map
 dungeon3Floor1 =
@@ -128,9 +141,10 @@ dungeon3Floor1 =
       , exitOpen = True
       , isDungeonExit = True}]}
 
--------------------
--- Helper Functions
--------------------
+
+------------------------
+-- Helper Functions ----
+------------------------
 
 findExitByCoordinates: Coordinates -> List Exit -> Exit
 findExitByCoordinates searchCoordinates exitList = List.head (List.filter (\(Exit { coordinates }) -> coordinates == searchCoordinates) exitList)
