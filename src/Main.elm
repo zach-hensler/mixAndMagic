@@ -2,8 +2,8 @@ module Main exposing (..)
 
 
 import Browser
-import Html exposing (Html, button, div, hr, span, text)
-import Html.Attributes exposing (style)
+import Html exposing (Html, button, div, h3, h4, hr, p, span, text)
+import Html.Attributes exposing (disabled, style)
 import Html.Events exposing (onClick)
 import Map
 
@@ -30,10 +30,11 @@ maxPartySize = 3
 ----------------------------
 
 type alias Coordinates = (Int, Int)
+type alias ShopItem = { name: String, description: String, cost: Int }
 type alias HeldItem = { name: String, description: String, numberAvailable: Int, numberOwned: Int }
 type alias Character = { class: String, species: String, heldItem: Maybe HeldItem }
 
-type ActiveView = Map | MainMenu | Bag | Party | Reserve | ItemAssignmentViewOpen HeldItem | Shop
+type ActiveView = Map | MainMenu | Bag | Party | Reserve | ItemAssignmentViewOpen HeldItem | Shop (List ShopItem)
 
 
 type alias Model =
@@ -43,6 +44,7 @@ type alias Model =
   , dungeon3Complete: Bool
   , currentMap: Map.Map
   , activeView: ActiveView
+  , money: Int
   , bag: List HeldItem
   , party: List Character
   , reserve: List Character}
@@ -55,13 +57,14 @@ init =
   , dungeon3Complete = False
   , currentMap = Map.hubMap False False False
   , activeView = Map
+  , money = 20
   , bag =
-    [ { name = "Enchanted Gloves", description = "All contact moves have a random secondary effect", numberAvailable = 1, numberOwned = 1 }
-    , { name = "Protective Pendant", description = "Take 10% less damage from attacks", numberAvailable = 1, numberOwned = 1 }
-    , { name = "Holy Hand-grenade", description = "Your first attack deals explosive damage and blinds foes", numberAvailable = 1, numberOwned = 1 }
-    , { name = "Channeling Staff", description = "Your magic attacks take an extra turn to charge, but deal 3x damage", numberAvailable = 1, numberOwned = 1 }
-    , { name = "Wooden Shield", description = "Take 20% less damage, but take 2x fire damage", numberAvailable = 1, numberOwned = 1 }
-    , { name = "Hideous Hat", description = "A hat so ugly that enemies are sure to target you first", numberAvailable = 1, numberOwned = 1 }]
+    [ { name = "Enchanted Gloves", description = "All contact moves have a random secondary effect", numberAvailable = 0, numberOwned = 0 }
+    , { name = "Protective Pendant", description = "Take 10% less damage from attacks", numberAvailable = 0, numberOwned = 0 }
+    , { name = "Holy Hand-grenade", description = "Your first attack deals explosive damage and blinds foes", numberAvailable = 0, numberOwned = 0 }
+    , { name = "Channeling Staff", description = "Your magic attacks take an extra turn to charge, but deal 3x damage", numberAvailable = 0, numberOwned = 0 }
+    , { name = "Wooden Shield", description = "Take 20% less damage, but take 2x fire damage", numberAvailable = 0, numberOwned = 0 }
+    , { name = "Hideous Hat", description = "A hat so ugly that enemies are sure to target you first", numberAvailable = 0, numberOwned = 0 }]
   , party =
     [ { class = "Mage", species = "Human", heldItem = Nothing }
     , { class = "Healer", species = "Elf", heldItem = Nothing }]
@@ -95,6 +98,7 @@ type Msg
   | CloseItemAssignment
   | PerformItemAssignment Character HeldItem
   | ReturnAssignedItem Character
+  | BuyShopItem ShopItem
 
 
 update: Msg -> Model -> Model
@@ -140,6 +144,20 @@ update msg model =
       then assignItem character item model |> showBag
       else (returnAssignedItem model character) |> (assignItem character item) |> showBag
     ReturnAssignedItem member -> returnAssignedItem model member
+    BuyShopItem item -> { model | bag = addItemToBag item.name model.bag, money = model.money - item.cost }
+
+addItemToBag: String -> List HeldItem -> List HeldItem
+addItemToBag newItemName bag =
+  let prevItem = findItemByName newItemName bag in
+  case prevItem of
+    Nothing -> bag
+    Just item -> replaceBagItem
+                  { item | numberOwned = item.numberOwned + 1, numberAvailable = item.numberAvailable + 1 }
+                  item bag
+
+findItemByName: String -> List HeldItem -> Maybe HeldItem
+findItemByName itemName bag =
+  List.head (List.filter (\i -> i.name == itemName) bag)
 
 showBag: Model -> Model
 showBag model = { model | activeView = Bag }
@@ -212,7 +230,11 @@ unlockNextDungeon model =
   else if not model.dungeon3Complete then { model | dungeon3Complete = True }
   else model
 
-enterShop model = { model | activeView = Shop }
+mockShopItems: List ShopItem
+mockShopItems =
+  [ { name = "Wooden Shield", description = "Take 20% less damage, but take 2x fire damage", cost = 10 }
+  , { name = "Channeling Staff", description = "Your magic attacks take an extra turn to charge, but deal 3x damage", cost = 100 }]
+enterShop model = { model | activeView = Shop mockShopItems }
 
 ----------------------------
 -- VIEW --------------------
@@ -230,6 +252,7 @@ view model =
   , style "text-align" "center"
   ]
   [ drawMapAndControls model
+  , drawShop model
   , drawMenu model
   , drawBag model
   , drawItemAssignment model
@@ -252,10 +275,7 @@ drawMapAndControls model =
       [ button [ onClick MovePlayerLeft ] [ text "Left" ]
       , button [ onClick MovePlayerUp ] [ text "Up" ]
       , button [ onClick MovePlayerDown ] [ text "Down" ]
-      , button [ onClick MovePlayerRight ] [ text "Right" ] ]
-    , div [ style "display" (if model.activeView == Shop then "block" else "none") ]
-        [ text "You are in the shop"
-      , button [ onClick LeaveShop ] [ text "Leave Shop" ] ] ]
+      , button [ onClick MovePlayerRight ] [ text "Right" ]]]
 
 drawMapRow: Model -> Int -> Html Msg
 drawMapRow model yCoordinate =
@@ -277,6 +297,41 @@ drawMapSquare model yCoordinate xCoordinate =
       else if List.member (xCoordinate, yCoordinate) model.currentMap.obstacles then text "*"
       else text " "
     ]
+
+drawShop: Model -> Html Msg
+drawShop model =
+  case model.activeView of
+    Shop shopItems -> div
+              [ style "border" "solid black 1px"
+              , style "margin" "10px"
+              , style "padding" "10px"]
+              [ div
+                [ style "display" "flex"
+                , style "justify-content" "space-between"
+                , style "align-items" "center"]
+                [ h3 [] [ text "Shop" ]
+                , p [] [ text ("$" ++ String.fromInt model.money) ]]
+                , hr [] []
+                , div [] [ text "Shop Items" ]
+                , hr [] []
+                , div [] (List.map (drawShopItem model) shopItems)
+                , button [ onClick LeaveShop ] [ text "Leave Shop" ]]
+    _ -> div [ style "display" "none" ] []
+
+drawShopItem: Model -> ShopItem -> Html Msg
+drawShopItem model item =
+  div []
+    [ div
+      [ style "display" "flex"
+      , style "flex-direction" "row"
+      , style "justify-content" "space-between"
+      , style "align-items" "center"]
+      [ h4 [] [ text item.name ]
+      , p [] [ text (String.fromInt item.cost) ]]
+    , p [] [ text item.description ]
+    , button
+      [ onClick (BuyShopItem item)
+      , disabled (model.money < item.cost) ] [ text "Buy" ]]
 
 drawMenu: Model -> Html Msg
 drawMenu model =
