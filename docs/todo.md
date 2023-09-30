@@ -9,9 +9,7 @@
 - add ability to remove party members?
 
 ### Shop
-- implement money
-- create shop view
-- create buying and selling functionality
+- create selling functionality
 - create consumable items
 - add consumable item functionality
 
