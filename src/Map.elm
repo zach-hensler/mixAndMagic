@@ -17,8 +17,10 @@ type alias Map =
   , width: Int
   , entrance: Coordinates
   , shop: Maybe Coordinates
+  , tavern: Maybe Coordinates
   , campfire: Maybe Coordinates
   , obstacles: List Coordinates
+  , enemies: List Coordinates
   , exits: List Exit}
 
 
@@ -32,8 +34,10 @@ hubMap dungeon1Complete dungeon2Complete dungeon3Complete =
   , width = 7
   , entrance = (3, 9)
   , shop = Just (0, 6)
+  , tavern = Just (6, 6)
   , campfire = Nothing
   , obstacles = []
+  , enemies = []
   , exits =
     [ Exit
       { coordinates = (0, 2)
@@ -62,8 +66,10 @@ dungeon1Floor1 =
   , width = 10
   , entrance = (1, 1)
   , shop = Nothing
+  , tavern = Nothing
   , campfire = Nothing
   , obstacles = []
+  , enemies = []
   , exits =
     [ Exit
       { coordinates = (9, 4)
@@ -77,8 +83,10 @@ dungeon1Floor2 =
   , width = 7
   , entrance = (0, 0)
   , shop = Nothing
+  , tavern = Nothing
   , campfire = Nothing
   , obstacles = []
+  , enemies = []
   , exits =
     [ Exit
       { coordinates = (6, 0)
@@ -97,8 +105,10 @@ dungeon2Floor1 =
   , width = 5
   , entrance = (1, 1)
   , shop = Nothing
+  , tavern = Nothing
   , campfire = Nothing
   , obstacles = []
+  , enemies = []
   , exits =
     [ Exit
       { coordinates = (4, 9)
@@ -112,8 +122,10 @@ dungeon2Floor2 =
   , width = 2
   , entrance = (0, 0)
   , shop = Nothing
+  , tavern = Nothing
   , campfire = Nothing
   , obstacles = []
+  , enemies = []
   , exits =
     [ Exit
       { coordinates = (1, 11)
@@ -132,8 +144,10 @@ dungeon3Floor1 =
   , width = 10
   , entrance = (1, 1)
   , shop = Nothing
+  , tavern = Nothing
   , campfire = Nothing
   , obstacles = []
+  , enemies = []
   , exits =
     [ Exit
       { coordinates = (9, 9)

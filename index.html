@@ -4479,6 +4479,7 @@ var $elm$core$Maybe$Just = function (a) {
 var $elm$core$Basics$True = {$: 'True'};
 var $author$project$Map$dungeon1Floor2 = {
 	campfire: $elm$core$Maybe$Nothing,
+	enemies: _List_Nil,
 	entrance: _Utils_Tuple2(0, 0),
 	exits: _List_fromArray(
 		[
@@ -4493,10 +4494,12 @@ var $author$project$Map$dungeon1Floor2 = {
 	height: 1,
 	obstacles: _List_Nil,
 	shop: $elm$core$Maybe$Nothing,
+	tavern: $elm$core$Maybe$Nothing,
 	width: 7
 };
 var $author$project$Map$dungeon1Floor1 = {
 	campfire: $elm$core$Maybe$Nothing,
+	enemies: _List_Nil,
 	entrance: _Utils_Tuple2(1, 1),
 	exits: _List_fromArray(
 		[
@@ -4511,10 +4514,12 @@ var $author$project$Map$dungeon1Floor1 = {
 	height: 5,
 	obstacles: _List_Nil,
 	shop: $elm$core$Maybe$Nothing,
+	tavern: $elm$core$Maybe$Nothing,
 	width: 10
 };
 var $author$project$Map$dungeon2Floor2 = {
 	campfire: $elm$core$Maybe$Nothing,
+	enemies: _List_Nil,
 	entrance: _Utils_Tuple2(0, 0),
 	exits: _List_fromArray(
 		[
@@ -4529,10 +4534,12 @@ var $author$project$Map$dungeon2Floor2 = {
 	height: 12,
 	obstacles: _List_Nil,
 	shop: $elm$core$Maybe$Nothing,
+	tavern: $elm$core$Maybe$Nothing,
 	width: 2
 };
 var $author$project$Map$dungeon2Floor1 = {
 	campfire: $elm$core$Maybe$Nothing,
+	enemies: _List_Nil,
 	entrance: _Utils_Tuple2(1, 1),
 	exits: _List_fromArray(
 		[
@@ -4547,10 +4554,12 @@ var $author$project$Map$dungeon2Floor1 = {
 	height: 10,
 	obstacles: _List_Nil,
 	shop: $elm$core$Maybe$Nothing,
+	tavern: $elm$core$Maybe$Nothing,
 	width: 5
 };
 var $author$project$Map$dungeon3Floor1 = {
 	campfire: $elm$core$Maybe$Nothing,
+	enemies: _List_Nil,
 	entrance: _Utils_Tuple2(1, 1),
 	exits: _List_fromArray(
 		[
@@ -4565,12 +4574,14 @@ var $author$project$Map$dungeon3Floor1 = {
 	height: 10,
 	obstacles: _List_Nil,
 	shop: $elm$core$Maybe$Nothing,
+	tavern: $elm$core$Maybe$Nothing,
 	width: 10
 };
 var $author$project$Map$hubMap = F3(
 	function (dungeon1Complete, dungeon2Complete, dungeon3Complete) {
 		return {
 			campfire: $elm$core$Maybe$Nothing,
+			enemies: _List_Nil,
 			entrance: _Utils_Tuple2(3, 9),
 			exits: _List_fromArray(
 				[
@@ -4600,6 +4611,8 @@ var $author$project$Map$hubMap = F3(
 			obstacles: _List_Nil,
 			shop: $elm$core$Maybe$Just(
 				_Utils_Tuple2(0, 6)),
+			tavern: $elm$core$Maybe$Just(
+				_Utils_Tuple2(6, 6)),
 			width: 7
 		};
 	});
@@ -5375,7 +5388,7 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $author$project$Main$findItemByName = F2(
+var $author$project$Items$findItemByName = F2(
 	function (itemName, bag) {
 		return $elm$core$List$head(
 			A2(
@@ -5385,7 +5398,7 @@ var $author$project$Main$findItemByName = F2(
 				},
 				bag));
 	});
-var $author$project$Main$replaceBagItem = F3(
+var $author$project$Items$replaceBagItem = F3(
 	function (newItem, oldItem, itemList) {
 		return A2(
 			$elm$core$List$map,
@@ -5394,15 +5407,15 @@ var $author$project$Main$replaceBagItem = F3(
 			},
 			itemList);
 	});
-var $author$project$Main$addItemToBag = F2(
+var $author$project$Items$addItemToBag = F2(
 	function (newItemName, bag) {
-		var prevItem = A2($author$project$Main$findItemByName, newItemName, bag);
+		var prevItem = A2($author$project$Items$findItemByName, newItemName, bag);
 		if (prevItem.$ === 'Nothing') {
 			return bag;
 		} else {
 			var item = prevItem.a;
 			return A3(
-				$author$project$Main$replaceBagItem,
+				$author$project$Items$replaceBagItem,
 				_Utils_update(
 					item,
 					{numberAvailable: item.numberAvailable + 1, numberOwned: item.numberOwned + 1}),
@@ -5418,7 +5431,7 @@ var $elm$core$List$append = F2(
 			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
 		}
 	});
-var $author$project$Main$replacePartyMember = F3(
+var $author$project$Characters$replacePartyMember = F3(
 	function (newMember, oldMember, memberList) {
 		return A2(
 			$elm$core$List$map,
@@ -5435,9 +5448,9 @@ var $author$project$Main$assignItem = F3(
 		return _Utils_update(
 			model,
 			{
-				bag: A3($author$project$Main$replaceBagItem, newItem, item, model.bag),
+				bag: A3($author$project$Items$replaceBagItem, newItem, item, model.bag),
 				party: A3(
-					$author$project$Main$replacePartyMember,
+					$author$project$Characters$replacePartyMember,
 					_Utils_update(
 						character,
 						{
@@ -5553,7 +5566,7 @@ var $author$project$Main$handleMapInteractions = function (model) {
 		$elm$core$Maybe$Just(model.playerCoordinates),
 		model.currentMap.shop) ? $author$project$Main$enterShop(model) : model);
 };
-var $author$project$Main$isNotSamePartyMember = F2(
+var $author$project$Characters$isNotSamePartyMember = F2(
 	function (character1, character2) {
 		return !_Utils_eq(character1, character2);
 	});
@@ -5611,14 +5624,14 @@ var $author$project$Main$returnAssignedItem = F2(
 				model,
 				{
 					bag: A3(
-						$author$project$Main$replaceBagItem,
+						$author$project$Items$replaceBagItem,
 						_Utils_update(
 							item,
 							{numberAvailable: item.numberAvailable + 1}),
 						item,
 						model.bag),
 					party: A3(
-						$author$project$Main$replacePartyMember,
+						$author$project$Characters$replacePartyMember,
 						_Utils_update(
 							character,
 							{heldItem: $elm$core$Maybe$Nothing}),
@@ -5724,7 +5737,7 @@ var $author$project$Main$update = F2(
 					{
 						party: A2(
 							$elm$core$List$filter,
-							$author$project$Main$isNotSamePartyMember(character),
+							$author$project$Characters$isNotSamePartyMember(character),
 							model.party),
 						reserve: A2(
 							$elm$core$List$append,
@@ -5746,7 +5759,7 @@ var $author$project$Main$update = F2(
 								[character])),
 						reserve: A2(
 							$elm$core$List$filter,
-							$author$project$Main$isNotSamePartyMember(character),
+							$author$project$Characters$isNotSamePartyMember(character),
 							model.reserve)
 					}) : model;
 			case 'AddNewPartyMember':
@@ -5797,16 +5810,18 @@ var $author$project$Main$update = F2(
 				return _Utils_update(
 					model,
 					{
-						bag: A2($author$project$Main$addItemToBag, item.name, model.bag),
+						bag: A2($author$project$Items$addItemToBag, item.name, model.bag),
 						money: model.money - item.cost
 					});
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Main$AddNewPartyMember = function (a) {
-	return {$: 'AddNewPartyMember', a: a};
-};
+var $author$project$Main$CloseBag = {$: 'CloseBag'};
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $author$project$Main$OpenItemAssigment = function (a) {
+	return {$: 'OpenItemAssigment', a: a};
+};
+var $elm$html$Html$hr = _VirtualDom_node('hr');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5824,35 +5839,10 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Main$drawAddNewMemberButton = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick(
-						$author$project$Main$AddNewPartyMember(
-							{_class: 'Mage', heldItem: $elm$core$Maybe$Nothing, species: 'Wolf'}))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Add new member')
-					]))
-			]));
-};
-var $author$project$Main$CloseBag = {$: 'CloseBag'};
-var $author$project$Main$OpenItemAssigment = function (a) {
-	return {$: 'OpenItemAssigment', a: a};
-};
-var $elm$html$Html$hr = _VirtualDom_node('hr');
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$drawBagItem = function (bagItem) {
 	return A2(
 		$elm$html$Html$div,
@@ -5974,6 +5964,10 @@ var $author$project$Main$drawBag = function (model) {
 					]))
 			]));
 };
+var $author$project$Main$drawBattleScene = F2(
+	function (enemies, model) {
+		return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+	});
 var $author$project$Main$CloseItemAssignment = {$: 'CloseItemAssignment'};
 var $author$project$Main$PerformItemAssignment = F2(
 	function (a, b) {
@@ -5994,10 +5988,8 @@ var $author$project$Main$drawItemAssignmentPartyMember = F2(
 					_Utils_ap(partyMember.species, partyMember._class))
 				]));
 	});
-var $author$project$Main$drawItemAssignment = function (model) {
-	var _v0 = model.activeView;
-	if (_v0.$ === 'ItemAssignmentViewOpen') {
-		var item = _v0.a;
+var $author$project$Main$drawItemAssignment = F2(
+	function (item, model) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -6041,20 +6033,12 @@ var $author$project$Main$drawItemAssignment = function (model) {
 							$elm$html$Html$text('Close')
 						]))
 				]));
-	} else {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'display', 'none')
-				]),
-			_List_Nil);
-	}
-};
+	});
 var $author$project$Main$MovePlayerDown = {$: 'MovePlayerDown'};
 var $author$project$Main$MovePlayerLeft = {$: 'MovePlayerLeft'};
 var $author$project$Main$MovePlayerRight = {$: 'MovePlayerRight'};
 var $author$project$Main$MovePlayerUp = {$: 'MovePlayerUp'};
+var $author$project$Main$OpenMenu = {$: 'OpenMenu'};
 var $author$project$Main$drawMapSquare = F3(
 	function (model, yCoordinate, xCoordinate) {
 		return A2(
@@ -6069,40 +6053,36 @@ var $author$project$Main$drawMapSquare = F3(
 			_List_fromArray(
 				[
 					function () {
-					if (_Utils_eq(
-						_Utils_Tuple2(xCoordinate, yCoordinate),
-						model.playerCoordinates)) {
+					var squareCoordinates = _Utils_Tuple2(xCoordinate, yCoordinate);
+					if (_Utils_eq(squareCoordinates, model.playerCoordinates)) {
 						return $elm$html$Html$text('P');
 					} else {
 						if (_Utils_eq(
-							$elm$core$Maybe$Just(
-								_Utils_Tuple2(xCoordinate, yCoordinate)),
+							$elm$core$Maybe$Just(squareCoordinates),
 							model.currentMap.shop)) {
 							return $elm$html$Html$text('S');
 						} else {
-							if (A2(
-								$elm$core$List$any,
-								function (_v0) {
-									var coordinates = _v0.a.coordinates;
-									return _Utils_eq(
-										coordinates,
-										_Utils_Tuple2(xCoordinate, yCoordinate));
-								},
-								model.currentMap.exits)) {
-								var _v1 = A2(
-									$author$project$Map$findExitByCoordinates,
-									_Utils_Tuple2(xCoordinate, yCoordinate),
-									model.currentMap.exits);
-								var exitOpen = _v1.a.exitOpen;
-								return exitOpen ? $elm$html$Html$text('O') : $elm$html$Html$text('X');
+							if (_Utils_eq(
+								$elm$core$Maybe$Just(squareCoordinates),
+								model.currentMap.tavern)) {
+								return $elm$html$Html$text('T');
 							} else {
 								if (A2(
-									$elm$core$List$member,
-									_Utils_Tuple2(xCoordinate, yCoordinate),
-									model.currentMap.obstacles)) {
-									return $elm$html$Html$text('*');
+									$elm$core$List$any,
+									function (_v0) {
+										var coordinates = _v0.a.coordinates;
+										return _Utils_eq(coordinates, squareCoordinates);
+									},
+									model.currentMap.exits)) {
+									var _v1 = A2($author$project$Map$findExitByCoordinates, squareCoordinates, model.currentMap.exits);
+									var exitOpen = _v1.a.exitOpen;
+									return exitOpen ? $elm$html$Html$text('O') : $elm$html$Html$text('X');
 								} else {
-									return $elm$html$Html$text(' ');
+									if (A2($elm$core$List$member, squareCoordinates, model.currentMap.obstacles)) {
+										return $elm$html$Html$text('*');
+									} else {
+										return $elm$html$Html$text(' ');
+									}
 								}
 							}
 						}
@@ -6190,143 +6170,131 @@ var $author$project$Main$drawMapAndControls = function (model) {
 							[
 								$elm$html$Html$text('Right')
 							]))
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Main$OpenMenu)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Open Menu')
 					]))
 			]));
 };
 var $author$project$Main$CloseMenu = {$: 'CloseMenu'};
 var $author$project$Main$OpenBag = {$: 'OpenBag'};
-var $author$project$Main$OpenMenu = {$: 'OpenMenu'};
 var $author$project$Main$OpenParty = {$: 'OpenParty'};
 var $author$project$Main$OpenReserve = {$: 'OpenReserve'};
 var $author$project$Main$drawMenu = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
+				A2($elm$html$Html$Attributes$style, 'margin', '5px'),
+				A2(
+				$elm$html$Html$Attributes$style,
+				'display',
+				_Utils_eq(model.activeView, $author$project$Main$MainMenu) ? 'flex' : 'none'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+				A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+			]),
 		_List_fromArray(
 			[
 				A2(
-				$elm$html$Html$button,
+				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Events$onClick($author$project$Main$OpenMenu),
-						A2($elm$html$Html$Attributes$style, 'margin', '5px'),
-						A2(
-						$elm$html$Html$Attributes$style,
-						'display',
-						_Utils_eq(model.activeView, $author$project$Main$MainMenu) ? 'none' : 'block')
+						A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Open Menu')
+						$elm$html$Html$text('Menu')
+					])),
+				A2(
+				$elm$html$Html$hr,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'width', '70%'),
+						A2($elm$html$Html$Attributes$style, 'color', 'lightgray')
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$OpenParty)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Party')
+							]))
 					])),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'border', 'solid black 1px'),
-						A2($elm$html$Html$Attributes$style, 'margin', '5px'),
-						A2(
-						$elm$html$Html$Attributes$style,
-						'display',
-						_Utils_eq(model.activeView, $author$project$Main$MainMenu) ? 'flex' : 'none'),
-						A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
-						A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+						A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
 					]),
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$div,
+						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+								$elm$html$Html$Events$onClick($author$project$Main$OpenReserve)
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Menu')
-							])),
+								$elm$html$Html$text('Reserve')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+					]),
+				_List_fromArray(
+					[
 						A2(
-						$elm$html$Html$hr,
+						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								A2($elm$html$Html$Attributes$style, 'width', '70%'),
-								A2($elm$html$Html$Attributes$style, 'color', 'lightgray')
+								$elm$html$Html$Events$onClick($author$project$Main$OpenBag)
 							]),
-						_List_Nil),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Bag')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+					]),
+				_List_fromArray(
+					[
 						A2(
-						$elm$html$Html$div,
+						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
+								$elm$html$Html$Events$onClick($author$project$Main$CloseMenu)
 							]),
 						_List_fromArray(
 							[
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Events$onClick($author$project$Main$OpenParty)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Party')
-									]))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Events$onClick($author$project$Main$OpenReserve)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Reserve')
-									]))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Events$onClick($author$project$Main$OpenBag)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Bag')
-									]))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'padding', '5px 10px')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Events$onClick($author$project$Main$CloseMenu)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Close')
-									]))
+								$elm$html$Html$text('Close')
 							]))
 					]))
 			]));
@@ -6637,7 +6605,7 @@ var $author$project$Main$drawShopItem = F2(
 							_List_fromArray(
 								[
 									$elm$html$Html$text(
-									$elm$core$String$fromInt(item.cost))
+									'$' + $elm$core$String$fromInt(item.cost))
 								]))
 						])),
 					A2(
@@ -6663,10 +6631,8 @@ var $author$project$Main$drawShopItem = F2(
 				]));
 	});
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
-var $author$project$Main$drawShop = function (model) {
-	var _v0 = model.activeView;
-	if (_v0.$ === 'Shop') {
-		var shopItems = _v0.a;
+var $author$project$Main$drawShop = F2(
+	function (shopItems, model) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -6730,16 +6696,7 @@ var $author$project$Main$drawShop = function (model) {
 							$elm$html$Html$text('Leave Shop')
 						]))
 				]));
-	} else {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'display', 'none')
-				]),
-			_List_Nil);
-	}
-};
+	});
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -6753,17 +6710,54 @@ var $author$project$Main$view = function (model) {
 				A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
 				A2($elm$html$Html$Attributes$style, 'text-align', 'center')
 			]),
-		_List_fromArray(
-			[
-				$author$project$Main$drawMapAndControls(model),
-				$author$project$Main$drawShop(model),
-				$author$project$Main$drawMenu(model),
-				$author$project$Main$drawBag(model),
-				$author$project$Main$drawItemAssignment(model),
-				$author$project$Main$drawParty(model),
-				$author$project$Main$drawReserve(model),
-				$author$project$Main$drawAddNewMemberButton(model)
-			]));
+		function () {
+			var _v0 = model.activeView;
+			switch (_v0.$) {
+				case 'Map':
+					return _List_fromArray(
+						[
+							$author$project$Main$drawMapAndControls(model)
+						]);
+				case 'MainMenu':
+					return _List_fromArray(
+						[
+							$author$project$Main$drawMenu(model)
+						]);
+				case 'Bag':
+					return _List_fromArray(
+						[
+							$author$project$Main$drawBag(model)
+						]);
+				case 'Party':
+					return _List_fromArray(
+						[
+							$author$project$Main$drawParty(model)
+						]);
+				case 'Reserve':
+					return _List_fromArray(
+						[
+							$author$project$Main$drawReserve(model)
+						]);
+				case 'ItemAssignmentViewOpen':
+					var item = _v0.a;
+					return _List_fromArray(
+						[
+							A2($author$project$Main$drawItemAssignment, item, model)
+						]);
+				case 'Shop':
+					var shopItems = _v0.a;
+					return _List_fromArray(
+						[
+							A2($author$project$Main$drawShop, shopItems, model)
+						]);
+				default:
+					var enemies = _v0.a;
+					return _List_fromArray(
+						[
+							A2($author$project$Main$drawBattleScene, enemies, model)
+						]);
+			}
+		}());
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
 	{init: $author$project$Main$init, update: $author$project$Main$update, view: $author$project$Main$view});
