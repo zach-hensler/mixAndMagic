@@ -6,6 +6,9 @@ import Html exposing (Html, button, div, h3, h4, hr, p, span, text)
 import Html.Attributes exposing (disabled, style)
 import Html.Events exposing (onClick)
 import Map
+import Items
+import Battle
+import Characters
 
 
 
@@ -30,11 +33,16 @@ maxPartySize = 3
 ----------------------------
 
 type alias Coordinates = (Int, Int)
-type alias ShopItem = { name: String, description: String, cost: Int }
-type alias HeldItem = { name: String, description: String, numberAvailable: Int, numberOwned: Int }
-type alias Character = { class: String, species: String, heldItem: Maybe HeldItem }
 
-type ActiveView = Map | MainMenu | Bag | Party | Reserve | ItemAssignmentViewOpen HeldItem | Shop (List ShopItem)
+type ActiveView
+  = Map
+  | MainMenu
+  | Bag
+  | Party
+  | Reserve
+  | ItemAssignmentViewOpen Items.HeldItem
+  | Shop (List Items.ShopItem)
+  | Battle (List Battle.Enemy)
 
 
 type alias Model =
@@ -45,9 +53,9 @@ type alias Model =
   , currentMap: Map.Map
   , activeView: ActiveView
   , money: Int
-  , bag: List HeldItem
-  , party: List Character
-  , reserve: List Character}
+  , bag: List Items.HeldItem
+  , party: List Characters.Character
+  , reserve: List Characters.Character}
 
 init : Model
 init =
@@ -91,14 +99,14 @@ type Msg
   | CloseReserve
   | OpenBag
   | CloseBag
-  | MovePartyMemberToReserve Character
-  | MoveReserveMemberToParty Character
-  | AddNewPartyMember Character
-  | OpenItemAssigment HeldItem
+  | MovePartyMemberToReserve Characters.Character
+  | MoveReserveMemberToParty Characters.Character
+  | AddNewPartyMember Characters.Character
+  | OpenItemAssigment Items.HeldItem
   | CloseItemAssignment
-  | PerformItemAssignment Character HeldItem
-  | ReturnAssignedItem Character
-  | BuyShopItem ShopItem
+  | PerformItemAssignment Characters.Character Items.HeldItem
+  | ReturnAssignedItem Characters.Character
+  | BuyShopItem Items.ShopItem
 
 
 update: Msg -> Model -> Model
@@ -124,12 +132,12 @@ update msg model =
     CloseBag -> { model | activeView = MainMenu }
     MovePartyMemberToReserve character ->
       { model
-      | party = List.filter (isNotSamePartyMember character) model.party
+      | party = List.filter (Characters.isNotSamePartyMember character) model.party
       , reserve = List.append model.reserve [character]}
     MoveReserveMemberToParty character ->
       if List.length model.party < maxPartySize
       then { model
-      | reserve = List.filter (isNotSamePartyMember character) model.reserve
+      | reserve = List.filter (Characters.isNotSamePartyMember character) model.reserve
       , party = List.append model.party [character]}
       else model
     AddNewPartyMember character ->
@@ -144,49 +152,29 @@ update msg model =
       then assignItem character item model |> showBag
       else (returnAssignedItem model character) |> (assignItem character item) |> showBag
     ReturnAssignedItem member -> returnAssignedItem model member
-    BuyShopItem item -> { model | bag = addItemToBag item.name model.bag, money = model.money - item.cost }
+    BuyShopItem item -> { model | bag = Items.addItemToBag item.name model.bag, money = model.money - item.cost }
 
-addItemToBag: String -> List HeldItem -> List HeldItem
-addItemToBag newItemName bag =
-  let prevItem = findItemByName newItemName bag in
-  case prevItem of
-    Nothing -> bag
-    Just item -> replaceBagItem
-                  { item | numberOwned = item.numberOwned + 1, numberAvailable = item.numberAvailable + 1 }
-                  item bag
 
-findItemByName: String -> List HeldItem -> Maybe HeldItem
-findItemByName itemName bag =
-  List.head (List.filter (\i -> i.name == itemName) bag)
+
+
 
 showBag: Model -> Model
 showBag model = { model | activeView = Bag }
 
-assignItem: Character -> HeldItem -> Model -> Model
+assignItem: Characters.Character -> Items.HeldItem -> Model -> Model
 assignItem character item model =
   let newItem = { item | numberAvailable = item.numberAvailable - 1 } in
   { model
-  | party = replacePartyMember { character | heldItem = Just newItem } { character | heldItem = Nothing } model.party
-  , bag = replaceBagItem newItem item model.bag}
+  | party = Characters.replacePartyMember { character | heldItem = Just newItem } { character | heldItem = Nothing } model.party
+  , bag = Items.replaceBagItem newItem item model.bag}
 
-returnAssignedItem: Model -> Character -> Model
+returnAssignedItem: Model -> Characters.Character -> Model
 returnAssignedItem model character =
   case character.heldItem of
     Nothing -> model
     Just item -> { model
-            | party = replacePartyMember { character | heldItem = Nothing } character model.party
-            , bag = replaceBagItem { item | numberAvailable = item.numberAvailable + 1 } item model.bag}
-
-replaceBagItem: HeldItem -> HeldItem -> List HeldItem -> List HeldItem
-replaceBagItem newItem oldItem itemList =
-  List.map (\i -> if i == oldItem then newItem else i) itemList
-
-replacePartyMember: Character -> Character -> List Character -> List Character
-replacePartyMember newMember oldMember memberList =
-  List.map (\m -> if m == oldMember then newMember else m) memberList
-
-isNotSamePartyMember: Character -> Character -> Bool
-isNotSamePartyMember character1 character2 = not (character1 == character2)
+            | party = Characters.replacePartyMember { character | heldItem = Nothing } character model.party
+            , bag = Items.replaceBagItem { item | numberAvailable = item.numberAvailable + 1 } item model.bag}
 
 moveToNewSpace: (Int, Int) -> Model -> Model
 moveToNewSpace newPlayerCoordinates model = { model | playerCoordinates =
@@ -230,7 +218,7 @@ unlockNextDungeon model =
   else if not model.dungeon3Complete then { model | dungeon3Complete = True }
   else model
 
-mockShopItems: List ShopItem
+mockShopItems: List Items.ShopItem
 mockShopItems =
   [ { name = "Wooden Shield", description = "Take 20% less damage, but take 2x fire damage", cost = 10 }
   , { name = "Channeling Staff", description = "Your magic attacks take an extra turn to charge, but deal 3x damage", cost = 100 }]
@@ -251,15 +239,15 @@ view model =
   , style "align-items" "center"
   , style "text-align" "center"
   ]
-  [ drawMapAndControls model
-  , drawShop model
-  , drawMenu model
-  , drawBag model
-  , drawItemAssignment model
-  , drawParty model
-  , drawReserve model
-  , drawAddNewMemberButton model
-  ]
+  (case model.activeView of
+    Map -> [drawMapAndControls model]
+    MainMenu -> [drawMenu model]
+    Bag -> [drawBag model]
+    Party -> [drawParty model]
+    Reserve -> [drawReserve model]
+    ItemAssignmentViewOpen item -> [drawItemAssignment item model]
+    Shop shopItems -> [drawShop shopItems model]
+    Battle enemies -> [drawBattleScene enemies model])
 
 drawMapAndControls: Model -> Html Msg
 drawMapAndControls model =
@@ -275,7 +263,8 @@ drawMapAndControls model =
       [ button [ onClick MovePlayerLeft ] [ text "Left" ]
       , button [ onClick MovePlayerUp ] [ text "Up" ]
       , button [ onClick MovePlayerDown ] [ text "Down" ]
-      , button [ onClick MovePlayerRight ] [ text "Right" ]]]
+      , button [ onClick MovePlayerRight ] [ text "Right" ]]
+    , button [ onClick OpenMenu ] [ text "Open Menu" ]]
 
 drawMapRow: Model -> Int -> Html Msg
 drawMapRow model yCoordinate =
@@ -289,36 +278,35 @@ drawMapSquare model yCoordinate xCoordinate =
     , style "width" "40px"
     , style "height" "40px"
     ]
-    [ if (xCoordinate, yCoordinate) == model.playerCoordinates then text "P"
-      else if Just (xCoordinate, yCoordinate) == (model.currentMap.shop) then text "S"
-      else if List.any (\(Map.Exit { coordinates }) -> coordinates == (xCoordinate, yCoordinate)) model.currentMap.exits
-        then let (Map.Exit { exitOpen }) = (Map.findExitByCoordinates (xCoordinate, yCoordinate) model.currentMap.exits) in
-          if exitOpen then text "O" else text "X"
-      else if List.member (xCoordinate, yCoordinate) model.currentMap.obstacles then text "*"
-      else text " "
-    ]
+    [ let squareCoordinates = (xCoordinate, yCoordinate) in
+        if squareCoordinates == model.playerCoordinates then text "P"
+        else if Just squareCoordinates == (model.currentMap.shop) then text "S"
+        else if Just squareCoordinates == (model.currentMap.tavern) then text "T"
+        else if List.any (\(Map.Exit { coordinates }) -> coordinates == squareCoordinates) model.currentMap.exits
+          then let (Map.Exit { exitOpen }) = (Map.findExitByCoordinates squareCoordinates model.currentMap.exits) in
+            if exitOpen then text "O" else text "X"
+        else if List.member squareCoordinates model.currentMap.obstacles then text "*"
+        else text " "]
 
-drawShop: Model -> Html Msg
-drawShop model =
-  case model.activeView of
-    Shop shopItems -> div
-              [ style "border" "solid black 1px"
-              , style "margin" "10px"
-              , style "padding" "10px"]
-              [ div
-                [ style "display" "flex"
-                , style "justify-content" "space-between"
-                , style "align-items" "center"]
-                [ h3 [] [ text "Shop" ]
-                , p [] [ text ("$" ++ String.fromInt model.money) ]]
-                , hr [] []
-                , div [] [ text "Shop Items" ]
-                , hr [] []
-                , div [] (List.map (drawShopItem model) shopItems)
-                , button [ onClick LeaveShop ] [ text "Leave Shop" ]]
-    _ -> div [ style "display" "none" ] []
+drawShop: List Items.ShopItem -> Model -> Html Msg
+drawShop shopItems model =
+  div
+    [ style "border" "solid black 1px"
+    , style "margin" "10px"
+    , style "padding" "10px"]
+    [ div
+      [ style "display" "flex"
+      , style "justify-content" "space-between"
+      , style "align-items" "center"]
+      [ h3 [] [ text "Shop" ]
+      , p [] [ text ("$" ++ String.fromInt model.money) ]]
+      , hr [] []
+      , div [] [ text "Shop Items" ]
+      , hr [] []
+      , div [] (List.map (drawShopItem model) shopItems)
+      , button [ onClick LeaveShop ] [ text "Leave Shop" ]]
 
-drawShopItem: Model -> ShopItem -> Html Msg
+drawShopItem: Model -> Items.ShopItem -> Html Msg
 drawShopItem model item =
   div []
     [ div
@@ -327,7 +315,7 @@ drawShopItem model item =
       , style "justify-content" "space-between"
       , style "align-items" "center"]
       [ h4 [] [ text item.name ]
-      , p [] [ text (String.fromInt item.cost) ]]
+      , p [] [ text ("$" ++ String.fromInt item.cost) ]]
     , p [] [ text item.description ]
     , button
       [ onClick (BuyShopItem item)
@@ -335,25 +323,18 @@ drawShopItem model item =
 
 drawMenu: Model -> Html Msg
 drawMenu model =
-  div []
-    [ button
-      [ onClick OpenMenu
-      , style "margin" "5px"
-      , style "display" (if model.activeView == MainMenu then "none" else "block")] [ text "Open Menu" ]
-    , div
-      [ style "border" "solid black 1px"
-      , style "margin" "5px"
-      , style "display" (if model.activeView == MainMenu then "flex" else "none")
-      , style "flex-direction" "column"
-      , style "align-items" "center"]
-      [ div [ style "padding" "5px 10px" ] [ text "Menu" ]
-      , hr [ style "width" "70%", style "color" "lightgray" ] []
-      , div [ style "padding" "5px 10px" ] [ button [ onClick OpenParty ] [ text "Party" ] ]
-      , div [ style "padding" "5px 10px" ] [ button [ onClick OpenReserve ] [ text "Reserve" ] ]
-      , div [ style "padding" "5px 10px" ] [ button [ onClick OpenBag ] [ text "Bag" ] ]
-      , div [ style "padding" "5px 10px" ] [ button [ onClick CloseMenu ] [ text "Close" ] ]
-      ]
-    ]
+  div
+    [ style "border" "solid black 1px"
+    , style "margin" "5px"
+    , style "display" (if model.activeView == MainMenu then "flex" else "none")
+    , style "flex-direction" "column"
+    , style "align-items" "center"]
+    [ div [ style "padding" "5px 10px" ] [ text "Menu" ]
+    , hr [ style "width" "70%", style "color" "lightgray" ] []
+    , div [ style "padding" "5px 10px" ] [ button [ onClick OpenParty ] [ text "Party" ] ]
+    , div [ style "padding" "5px 10px" ] [ button [ onClick OpenReserve ] [ text "Reserve" ] ]
+    , div [ style "padding" "5px 10px" ] [ button [ onClick OpenBag ] [ text "Bag" ] ]
+    , div [ style "padding" "5px 10px" ] [ button [ onClick CloseMenu ] [ text "Close" ]]]
 
 drawBag: Model -> Html Msg
 drawBag model =
@@ -368,7 +349,7 @@ drawBag model =
     , style "flex-direction" "column"] (List.map drawBagItem model.bag)
   , button [ onClick CloseBag, style "margin" "5px 10px" ] [ text "Close" ] ]
 
-drawBagItem: HeldItem -> Html Msg
+drawBagItem: Items.HeldItem -> Html Msg
 drawBagItem bagItem =
   div
     [ style "padding" "5px 10px"]
@@ -384,22 +365,19 @@ drawBagItem bagItem =
       , onClick (OpenItemAssigment bagItem) ]
       [ text "Assign" ]]
 
-drawItemAssignment: Model -> Html Msg
-drawItemAssignment model =
-  case model.activeView of
-    ItemAssignmentViewOpen item ->
-      div
-        [ style "border" "solid black 1px"
-        , style "margin" "5px"
-        , style "flex-direction" "column"]
-        [ div [ style "padding" "5px 10px" ] [text ("Assign " ++ item.name ++ " to:") ]
-        , div
-          [ style "display" "flex"
-          , style "flex-direction" "column"] (List.map (drawItemAssignmentPartyMember item) model.party)
-          , button [ onClick CloseItemAssignment, style "margin" "5px 10px" ] [ text "Close" ]]
-    _ -> div [ style "display" "none" ] []
+drawItemAssignment: Items.HeldItem -> Model -> Html Msg
+drawItemAssignment item model =
+  div
+    [ style "border" "solid black 1px"
+    , style "margin" "5px"
+    , style "flex-direction" "column"]
+    [ div [ style "padding" "5px 10px" ] [text ("Assign " ++ item.name ++ " to:") ]
+    , div
+      [ style "display" "flex"
+      , style "flex-direction" "column"] (List.map (drawItemAssignmentPartyMember item) model.party)
+      , button [ onClick CloseItemAssignment, style "margin" "5px 10px" ] [ text "Close" ]]
 
-drawItemAssignmentPartyMember: HeldItem -> Character -> Html Msg
+drawItemAssignmentPartyMember: Items.HeldItem -> Characters.Character -> Html Msg
 drawItemAssignmentPartyMember item partyMember =
   button
     [onClick (PerformItemAssignment partyMember item)] [ text (partyMember.species ++ partyMember.class) ]
@@ -417,7 +395,7 @@ drawParty model =
     , style "flex-direction" "column"] (List.map drawPartyMember model.party)
   , button [ onClick CloseParty, style "margin" "5px 10px" ] [ text "Close" ]]
 
-drawPartyMember: Character -> Html Msg
+drawPartyMember: Characters.Character -> Html Msg
 drawPartyMember partyMember =
   div
     [ style "padding" "5px 10px"]
@@ -429,7 +407,7 @@ drawPartyMember partyMember =
       [ button [ onClick (ReturnAssignedItem partyMember) ] [text "Return Item"] ]
     , div [] [ button [ onClick (MovePartyMemberToReserve partyMember) ] [ text "Move to Reserve" ] ]]
 
-drawPartyMemberHeldItem: Maybe HeldItem -> Html Msg
+drawPartyMemberHeldItem: Maybe Items.HeldItem -> Html Msg
 drawPartyMemberHeldItem bagItem =
   case bagItem of
     Nothing -> div [ style "display" "none" ] []
@@ -448,17 +426,7 @@ drawReserve model =
     , style "flex-direction" "column"] (List.map drawReserveMember model.reserve)
   , button [ onClick CloseReserve, style "margin" "5px 10px" ] [ text "Close" ] ]
 
-drawAddNewMemberButton: Model -> Html Msg
-drawAddNewMemberButton model =
-  div []
-    [ button
-      [ onClick (AddNewPartyMember
-        { class = "Mage"
-        , species = "Wolf"
-        , heldItem = Nothing } )]
-      [ text "Add new member" ]]
-
-drawReserveMember: Character -> Html Msg
+drawReserveMember: Characters.Character -> Html Msg
 drawReserveMember reserveMember =
   div
     [ style "padding" "5px 10px"]
@@ -467,8 +435,12 @@ drawReserveMember reserveMember =
     , drawReserveMemberHeldItem reserveMember.heldItem
     , div [] [ button [ onClick (MoveReserveMemberToParty reserveMember) ] [ text "Move to Party" ] ]]
 
-drawReserveMemberHeldItem: Maybe HeldItem -> Html Msg
+drawReserveMemberHeldItem: Maybe Items.HeldItem -> Html Msg
 drawReserveMemberHeldItem bagItem =
   case bagItem of
     Nothing -> div [ style "display" "none" ] []
     Just item -> div [] [text ("holding: " ++ item.name)]
+
+drawBattleScene: List Battle.Enemy -> Model -> Html Msg
+drawBattleScene enemies model =
+  div [] []

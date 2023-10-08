@@ -19,6 +19,7 @@
 - keep map centered around character (adjust drawing for loop to go from -x character pos to +x character pos)
 - implement procedurally generated dungeon floors
 - add campfires (or some place to heal characters mid-dungeon)
+- add taverns for the hub for users to recruit new members
 - add enemies to map, they should trigger battle view
 - replace player on map with party members walking in a line (think pokemon mystery dungeon)
 
@@ -40,7 +41,6 @@
 - add held items functionality
 
 ### Design
-- Show only one view at a time
 - Mobile Friendly
 
 ---
